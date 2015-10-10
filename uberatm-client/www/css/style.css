@@ -1,1 +1,9 @@
 /* Empty. Add your own CSS if you like */
+html {
+	text-align:center;
+}
+
+.site-block {
+	display:block;
+	margin:10px auto;
+}
