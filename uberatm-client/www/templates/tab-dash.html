@@ -1,13 +1,11 @@
 <ion-view view-title="Dashboard">
   <ion-content class="padding">
     <ionic-timepicker input-obj="timePickerObject">
-    <div class="padding-vertical">
-      <h5 class="text-center">24-Hour Format - 10 Mins Steps</h5>
-      <ionic-timepicker input-obj="timePickerObject24Hour">
-        <button class="button button-block button-positive overflowShow">
-          <strong etime="timePickerObject24Hour.inputEpochTime" class="ng-binding" ng-bind-html="html-time-picker">10:19</strong>
-        </button>
-      </ionic-timepicker>
-    </div>
+          <button class="button button-block button-positive overflowShow">
+            <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
+              <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
+            </strong>
+          </button>
+        </ionic-timepicker>
   </ion-content>
 </ion-view>

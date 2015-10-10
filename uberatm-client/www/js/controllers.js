@@ -1,16 +1,25 @@
 angular.module('starter.controllers', [])
 
 .controller('DashCtrl', function($scope) {
+  function formatTime(time_digit) {
+    if(time_digit < 10) {
+      return '0' + time_digit;
+    }else{
+      return time_digit;
+    }
+  }
+
   function timePickerCallback(val) {
     if (typeof (val) === 'undefined') {
       console.log('Time not selected');
     } else {
       var selectedTime = new Date(val * 1000);
       console.log('Selected epoch is : ', val, 'and the time is ', selectedTime.getUTCHours(), ':', selectedTime.getUTCMinutes(), 'in UTC');
-      $scope['html-time-picker'] = 'hi';
+      $scope.epochTime = val;
     }
   }  
 
+  $scope.epochTime = 27000;
   $scope.timePickerObject = {
     inputEpochTime: ((new Date()).getHours() * 60 * 60),  //Optional
     step: 15,  //Optional
@@ -51,3 +60,56 @@ angular.module('starter.controllers', [])
     enableFriends: true
   };
 });
+
+app.directive('standardTimeNoMeridian', function() {
+  return {
+    restrict: 'AE',
+    replace: true,
+    scope: {
+      etime: '=etime'
+    },
+    template: "<strong>{{stime}}</strong>",
+    link: function(scope, elem, attrs) {
+
+      scope.stime = epochParser(scope.etime, 'time');
+
+      function prependZero(param) {
+        if (String(param).length < 2) {
+          return "0" + String(param);
+        }
+        return param;
+      }
+
+      function epochParser(val, opType) {
+        var am_pm = "AM"
+        if (val === null) {
+          return "00 : 00 " + am_pm;
+        } else {
+          if (opType === 'time') {
+            var hours = parseInt(val / 3600);
+            var minutes = (val / 60) % 60;
+
+            if (hours >= 12) {
+              am_pm = "PM";
+            }else{
+              am_pm = "AM";
+            }
+
+            if (hours >= 13) {
+              hours -= 12;
+            }else if(hours == 0) {
+              hours += 12;
+            }
+
+            return (prependZero(hours) + " : " + prependZero(minutes)) + " " + am_pm;
+          }
+        }
+      }
+
+      scope.$watch('etime', function(newValue, oldValue) {
+        scope.stime = epochParser(scope.etime, 'time');
+      });
+
+    }
+  };
+})
