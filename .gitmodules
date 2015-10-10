@@ -1,0 +1,3 @@
+[submodule "uberatm-client/www/lib/ionic-timepicker"]
+	path = uberatm-client/www/lib/ionic-timepicker
+	url = https://github.com/rajeshwarpatlolla/ionic-timepicker
