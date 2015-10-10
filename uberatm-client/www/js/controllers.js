@@ -1,7 +1,25 @@
-angular.module('starter.controllers', [])
+Aangular.module('starter.controllers', [])
 
 .controller('DashCtrl', function($scope) {
   $scope.pubTransportBool = true;
+    
+  $scope.getLocation = function(user_address) {
+      var here_url = "http://geocoder.cit.api.here.com/6.2/geocode.json?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg&gen=9";
+      $http({
+	  method: 'GET',
+	  url: here_url,
+	  params: {searchtext: user_address}
+      }).then(function successCallback(response) {
+	  //The request worked. Do some display stuff.
+	  var address = JSON.parse(response.data);
+	  var latitude = address.Response.View.Result.Location.NavigationPosition.Latitude;
+	  var longitude = address.Response.View.Result.Location.NavigationPosition.Longitude;
+	  $scope.callUber(); //We now call uber since it worked
+      }, function errorCallback(resonse) {
+	  //Display error in the UI
+      });
+      
+
   $scope.callUber = function() {
     $scope.longitude = 1;
     $scope.latitude = 1;
