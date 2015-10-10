@@ -5,7 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-app = angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'ionic-timepicker']);
+app = angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'starter.directives', 'ionic-timepicker', 'ionic.contrib.frost']);
 
 app.run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -41,4 +41,18 @@ app.run(function($ionicPlatform) {
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/dash');
 
+});
+
+app.controller('UnderCtrl', function($scope) {
+  $scope.items = [];
+  for(var i = 0; i < 30; i++) {
+    $scope.items.push({text: 'Item ' + (i+1) });
+  }
+})
+
+.controller('OverlayCtrl', function($scope) {
+  $scope.items = [];
+  for(var i = 0; i < 5; i++) {
+    $scope.items.push({text: 'Option' + (i+1) });
+  }
 });
