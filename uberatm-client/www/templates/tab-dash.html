@@ -7,11 +7,11 @@
 
 <ion-pane frost ng-controller="StartUnderCtrl">
   <ion-content scroll="false">
-    <!-- <map on-create="mapCreated(map)"></map> -->
+    <map on-create="mapCreated(map)"></map>
 
-    <!-- <ion-footer-bar class="bar-stable">
+    <ion-footer-bar class="bar-stable">
       <a ng-click="centerOnMe()" class="button button-icon icon ion-navigate"></a>
-    </ion-footer-bar> -->
+    </ion-footer-bar>
   </ion-content>
 </ion-pane>
 
@@ -21,26 +21,40 @@
   </ion-header-bar>
   <ion-content class="has-header">
     <!-- <div class="overlay-spacer"></div> -->
-    <div class="list list-inset">
-      <label class="item item-input">
-        <i class="icon ion-search placeholder-icon"></i>
-        <input type="search" placeholder="Departure Location" ng-model="deptAddress" ng-change="onAddressChange(deptAddress)">
-        <button class="button button-light ion-ios-circle-filled button-dark" on-tap="onClickHere()"></button>
-      </label>
 
-      <div class="list" ng-if="addresses.length > 0">
-        <li class="item" ng-repeat="address in addresses">{{address.name}}</li>
-      </div>
-      <label class="item item-input item-stacked-label">
-        <!-- <span class="input-label">Departure Time</span> -->
-        <ionic-timepicker input-obj="timePickerObject">
-          <button class="button button-block overflowShow">
-            <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
-              <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
-            </strong>
+    <form ng-submit="callUber(deptAddress)">
+      <div class="list list-inset">
+        <label class="item item-input">
+          <i class="icon ion-search placeholder-icon"></i>
+          <input type="search" placeholder="Departure Location" ng-model="deptAddress" ng-change="onAddressChange(deptAddress)">
+          <button class="button button-light ion-ios-circle-filled button-dark" on-tap="onClickHere()"></button>
+        </label>
+
+        <div class="list" ng-if="addresses.length > 0">
+          <li class="item" ng-repeat="address in addresses">{{address}}</li>
+        </div>
+
+        <label class="item item-text-wrap">
+          <!-- <span class="input-label">Departure Time</span> -->
+          <ionic-timepicker input-obj="timePickerObject">
+            <button class="button button-block overflowShow site-block">
+              <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
+                <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
+              </strong>
+            </button>
+          </ionic-timepicker>
+
+          <!-- <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input> -->
+        </label>
+
+        <button class="button button-full button-positive site-block" type = "submit">
+            Go Uber!
           </button>
-        </ionic-timepicker>
-      </label>
-    </div>
+
+        
+        
+      </div>
+    </form>
+
   </ion-content>
 </ion-pane>

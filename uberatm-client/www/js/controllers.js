@@ -1,6 +1,16 @@
 angular.module('starter.controllers', [])
 
 .controller('DashCtrl', function($scope) {
+  $scope.pubTransportBool = true;      
+
+  $scope.publicTransportation = function(){
+    if (pubTransportBool) {
+      //Display map 
+    } else {
+      // Google URL change 
+    }
+  };
+
   function timePickerCallback(val) {
     if (typeof (val) === 'undefined') {
       console.log('Time not selected');
@@ -112,28 +122,118 @@ app.directive('standardTimeNoMeridian', function() {
   };
 })
 
-.controller('StartOverlayCtrl', function($scope) {
+.controller('StartOverlayCtrl', function($scope, $http) {
   $scope.addresses = [];
   $scope.deptAddress = "";
+  $scope.addressQueryInProcess = false;
+  $scope.addressQueryOnWait = "";
+  $scope.candidateAddressResults = {}
+  $scope.latitude = -1;
+  $scope.longitude = -1;
 
-  $scope.getLocation = function(deptAddress, callback) { // TODO: this is a mock.
-    console.log('newValue = ' + deptAddress);
-    addresses = [];
-    if(deptAddress == "") return callback(addresses);
-    for(var i = 0; i < 2; i++) {
-      addresses.push({name: 'Address' + (i+1) });
-    }
-    callback(addresses);
+  $scope.useCurrentPosition = function(position) {
+     $scope.latitude = position.coords.latitude;
+     $scope.longitude = position.coords.longitude;
+     console.log('GPS: ' + $scope.latitude + " , " + $scope.longitude);
+  }
+
+  if (navigator.geolocation) {
+     navigator.geolocation.getCurrentPosition($scope.useCurrentPosition);
+  } else {
+     console.log("Unable to find current location");
   }
 
   $scope.onAddressChange = function (deptAddress) {
-    $scope.getLocation(deptAddress, function(addresses) {
-      $scope.addresses = addresses;
+    if(deptAddress == "" || $scope.latitude == -1) {
+      $scope.addresses = [];
+      return;
+    }
+
+    if($scope.addressQueryInProcess == true) {
+      $scope.addressQueryOnWait = deptAddress;
+      setTimeout(function() {
+        $scope.onAddressChange($scope.addressQueryOnWait);
+      }, 100);
+      return;
+    }
+
+    $scope.addressQueryInProcess = true;
+
+    $scope.getLocation(deptAddress, function(response) {        
+      console.log('response', response);
+      $scope.getCandidateAdresses(response, function(candidateAddressResults) {
+        $scope.candidateAddressResults = candidateAddressResults;
+        addresses = []
+        for(var key in candidateAddressResults) {
+          addresses.push(key);
+        }
+        $scope.addresses = addresses.slice(0, 3);
+        $scope.addressQueryInProcess = false;
+      });
     });
+    
   }
 
   $scope.onClickHere = function() {
     console.log('clicked')
     $scope.deptAddress = "Here"
+  }
+
+
+  $scope.getLocation = function (user_address, callback) {
+    var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg";
+    console.log('get');
+    $http({
+      method: 'GET',
+      url: here_url,
+      params: {
+        q: user_address, 
+        at: $scope.latitude + "," + $scope.longitude
+      }
+    }).then(function successCallback(response) {
+      //The request worked. Do some display stuff.
+      console.log(response);
+      callback(response);
+      // callback(addresses);
+      // var latitude = address.Response.View.Result.Location.NavigationPosition.Latitude;
+      // var longitude = address.Response.View.Result.Location.NavigationPosition.Longitude;
+      // $scope.callUber(); //We now call uber since it worked
+    }, function errorCallback(resonse) {
+      //Display error in the UI
+    });
+  }
+
+  $scope.getCandidateAdresses = function(response, callback) {
+    var results = {}
+    if(response.data.results.items.length > 0) {
+      for(var result of response.data.results.items) {
+        var title = result.title;
+        results[title] = result;
+      }
+    }
+    callback(results);
+  }
+
+  $scope.callUber = function(deptAddress) {
+    console.log(deptAddress);
+    $scope.getLocation(deptAddress, $scope.getCandidateAdresses);
+
+    return;
+    $scope.longitude = 1;
+    $scope.latitude = 1;
+    var url = 'https://api.uber.com/v1/products';
+    var parameters = {
+        'server_token': 'INSERT_SERVER_TOKEN_HERE',
+        'latitude': scope.latitude,
+        'longitude': scope.longitude
+    };
+    $http.get(url, parameters).then(successCallback, errorCallback);
+    function successCallback(response) {
+
+    };
+    function errorCallback(response) {
+
+    };
+
   }
 })
