@@ -1,14 +1,6 @@
 angular.module('starter.controllers', [])
 
 .controller('DashCtrl', function($scope) {
-  function formatTime(time_digit) {
-    if(time_digit < 10) {
-      return '0' + time_digit;
-    }else{
-      return time_digit;
-    }
-  }
-
   function timePickerCallback(val) {
     if (typeof (val) === 'undefined') {
       console.log('Time not selected');
@@ -24,7 +16,7 @@ angular.module('starter.controllers', [])
     inputEpochTime: ((new Date()).getHours() * 60 * 60),  //Optional
     step: 15,  //Optional
     format: 12,  //Optional
-    titleLabel: '12-hour Format',  //Optional
+    titleLabel: 'Choose your departure time',  //Optional
     setLabel: 'Set',  //Optional
     closeLabel: 'Close',  //Optional
     setButtonType: 'button-positive',  //Optional
