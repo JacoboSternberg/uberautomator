@@ -250,7 +250,7 @@ app.directive('standardTimeNoMeridian', function() {
     function errorCallback(response) {
 
     };
-    $(".box .eta").append(estimateUber(car_ids));
+    $(".box .eta").append($scope.estimateUber(car_ids));
     $(".box .timeLeft").append($scope.epochParser($scope.epochTime - $.now(), "time"));
     // We should be able to create a server in order to store user's time request data.
 
