@@ -107,41 +107,12 @@ app.directive('standardTimeNoMeridian', function() {
   $scope.useCurrentPosition = function(position) {
      $scope.latitude = position.coords.latitude;
      $scope.longitude = position.coords.longitude;
-     function setCenter() {
-       if($scope.map) {
-          $scope.map.setCenter($scope.latitude, $scope.longitude);
-       }else{
-          setTimeout(setCenter, 100);
-       }
-     }
-     setCenter();
   }
 
   $scope.mapCreated = function(map, ui) {
     $scope.map = map;
     $scope.ui = ui;
   };
-
-  $scope.centerOnMe = function () {
-    console.log("Centering");
-    if (!$scope.map) {
-      return;
-    }
-
-    $scope.loading = $ionicLoading.show({
-      content: 'Getting current location...',
-      showBackdrop: false
-    });
-
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      console.log('Got pos', pos);
-      $scope.map.setCenter(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
-      $scope.loading.hide();
-    }, function (error) {
-      alert('Unable to get location: ' + error.message);
-    });
-  };
-
 
   if (navigator.geolocation) {
      navigator.geolocation.getCurrentPosition($scope.useCurrentPosition);
@@ -167,22 +138,29 @@ app.directive('standardTimeNoMeridian', function() {
 
     $scope.getLocation(deptAddress, function(response) {
       console.log('response', response);
-      $scope.getCandidateAdresses(response, function(candidateAddressResults) {
-        $scope.candidateAddressResults = candidateAddressResults;
-        addresses = []
-        for(var key in candidateAddressResults) {
-          addresses.push(key);
-        }
-        $scope.addresses = addresses.slice(0, 3);
-        $scope.addressQueryInProcess = false;
-      });
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      $scope.candidateAddressResults = candidateAddressResults;
+      addresses = []
+      for(var key in candidateAddressResults) {
+        addresses.push(key);
+      }
+      $scope.addresses = addresses.slice(0, 3);
+      $scope.addressQueryInProcess = false;
     });
 
   }
 
   $scope.onClickHere = function() {
-    console.log('clicked')
-    $scope.deptAddress = "Here"
+    $scope.getLocation("*", function(response) {
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      addresses = []
+      for(var key in candidateAddressResults) {
+        addresses.push(key);
+      }
+      if(addresses.length > 0) {
+        $scope.deptAddress = addresses[0];
+      }
+    })
   }
 
   $scope.getCurrentAddress = function(lati, longi) {
@@ -215,7 +193,7 @@ app.directive('standardTimeNoMeridian', function() {
       }
     }).then(function successCallback(response) {
       //The request worked. Do some display stuff.
-      callback(response)
+      callback(response);
       console.log(response);
       // callback(addresses);
       // var latitude = address.Response.View.Result.Location.NavigationPosition.Latitude;
@@ -226,7 +204,7 @@ app.directive('standardTimeNoMeridian', function() {
     });
   }
 
-  $scope.getCandidateAdresses = function(response, callback) {
+  $scope.getCandidateAdresses = function(response) {
     var results = {}
     if(response.data.results.items.length > 0) {
       for(var result of response.data.results.items) {
@@ -234,7 +212,7 @@ app.directive('standardTimeNoMeridian', function() {
         results[title] = result;
       }
     }
-    callback(results);
+    return results;
   }
 
   $scope.getPublicTransportRoute = function(startLat, startLong, endLat, endLong) {
@@ -283,31 +261,31 @@ app.directive('standardTimeNoMeridian', function() {
     $(".box").append("<div class='timeLeft'> Time left: </div>");
     $(".box").append("<div class='eta'> ETA: </div>");
     $(".box").append("<div class='callIn'> Calling Uber in: </div>");
-    while (true) {
-      var car_ids = []
-      $scope.getLocation(deptAddress, $scope.getCandidateAdresses);
-      var parameters = {
-          'server_token': '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf',
-          'latitude': $scope.latitude,
-          'longitude': $scope.longitude
-      };
-      $http.get(url, parameters).then(successCallback, errorCallback);
-    function successCallback(response) {
-      for (var product in response.products) {
-        car_ids.push(product.product_id);
-      }
-    };
-    function errorCallback(response) {
+    // while (true) {
+    //   var car_ids = []
+    //   $scope.getLocation(deptAddress, $scope.getCandidateAdresses);
+    //   var parameters = {
+    //       'server_token': '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf',
+    //       'latitude': $scope.latitude,
+    //       'longitude': $scope.longitude
+    //   };
+    //   $http.get(url, parameters).then(successCallback, errorCallback);
+    // function successCallback(response) {
+    //   for (var product in response.products) {
+    //     car_ids.push(product.product_id);
+    //   }
+    // };
+    // function errorCallback(response) {
 
-    };
-    $(".box .eta").append($scope.estimateUber(car_ids));
-    $(".box .timeLeft").append($scope.epochParser($scope.epochTime - $.now(), "time"));
+    // };
+    // $(".box .eta").append($scope.estimateUber(car_ids));
+    // $(".box .timeLeft").append($scope.epochParser($scope.epochTime - $.now(), "time"));
     // We should be able to create a server in order to store user's time request data.
 
     // Top: Map of uber drivers nearby
     // Middle-bottom: Time left until requested time, minimum ETA of driver
     // Driver ETA: calling in [(time left - minimum ETA)]
-    }
+    // }
   }
 
   $scope.epochParser = function (val, opType) {
