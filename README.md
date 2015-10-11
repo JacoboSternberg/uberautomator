@@ -3,14 +3,18 @@ One of the few issues with Uber is waiting for the driver to arrive at your loca
 
 # Here's how it works
 
-#Step 1: 
+#Step 1:
 Enter the time you expect to depart and departure location (If it's your current location, just press the dot on the right side of the search bar).
 
-#Step 2: 
+#Step 2:
 Enter your destination.
 
-#Step 3: 
+#Step 3:
 Receive a route of your travels, with instructions to either take Uber or public transportation.
 
-#Step 4: 
+#Step 4:
 Arrive at your destination!
+
+#About:
+Hermes uses the here API to process its location data, and to display maps.
+The ride requests are handled by the Uber API.
