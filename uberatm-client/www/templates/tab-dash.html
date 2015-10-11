@@ -2,24 +2,15 @@
   <ion-content scroll="false">
     <map on-create="mapCreated(map)"></map>
   </ion-content>
-</ion-view> -->
+</ion-view>
 
-<div class="box">
-<ion-pane frost ng-controller="StartUnderCtrl">
-  <ion-content scroll="false">
-    <map on-create="mapCreated(map)"></map>
 
-    <ion-footer-bar class="bar-stable">
-      <a ng-click="centerOnMe()" class="button button-icon icon ion-navigate"></a>
-    </ion-footer-bar>
-  </ion-content>
-</ion-pane>
 
-<ion-pane ng-controller="StartOverlayCtrl" class="dark-overlay">
-  <ion-header-bar class="bar-clear">
-    <button class="button button-icon ion-ios7-close-empty close-icon pull-right"></button>
-  </ion-header-bar>
-  <ion-content class="has-header">
+ -->
+
+
+ <ion-pane ng-controller="StartOverlayCtrl" class="dark-overlay" style="z-index: 1;">
+  <ion-content class="" scroll="false">
     <!-- <div class="overlay-spacer"></div> -->
 
     <form ng-submit="callUber(deptAddress)">
@@ -27,7 +18,7 @@
         <label class="item item-input">
           <i class="icon ion-search placeholder-icon"></i>
           <input type="search" placeholder="Departure Location" ng-model="deptAddress" ng-change="onAddressChange(deptAddress)">
-          <button class="button button-light ion-ios-circle-filled button-dark" on-tap="onClickHere()"></button>
+          <button class="button button-light ion-location button-dark" on-tap="onClickHere()"></button>
         </label>
 
         <div class="list" ng-if="addresses.length > 0">
@@ -37,7 +28,7 @@
         <label class="item item-text-wrap">
           <!-- <span class="input-label">Departure Time</span> -->
           <ionic-timepicker input-obj="timePickerObject">
-            <button class="button overflowShow site-block">
+            <button class="button button-block overflowShow site-block">
               <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
                 <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
               </strong>
@@ -47,12 +38,20 @@
           <!-- <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input> -->
         </label>
 
-        <button class="button button-positive site-block" type = "submit">
+        <button class="button button-full button-positive site-block" type = "submit" style="z-index: 1;">
             Go Uber!
           </button>
+
+        
+        
       </div>
     </form>
 
   </ion-content>
+
+    
+  <ion-content scroll="false" ng-controller="StartUnderCtrl" style="z-index: 0; top: 0px;">
+    <map on-create="mapCreated(map, ui)"></map>
+  </ion-content>
+  
 </ion-pane>
-</div>
