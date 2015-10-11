@@ -225,14 +225,58 @@ app.directive('standardTimeNoMeridian', function() {
         waypoint0: "geo!" + startLat + "," + startLong,
         waypoint1: "geo!" + endLat + "," + endLong,
         mode: "fastest;publicTransportTimeTable",
-        combineChange: "true",
-        arrival: //Add the correct time and date here. format:2013-09-09T12:44:56
+        combineChange: "true"
       }
     }).then(function successCallback(response) {
-      // do something with the route we found.
+      return response;
     }, function errorCallback(response) {
       console.log(response.status, "errorcode");
     });
+  }
+
+
+  /**
+   * Returns on array containing the start and end destinations of 1 or more
+   * uber rides. Based on the amount of public transportation needed.
+   * threshold corresponds to the minimum amount of time in seconds for which
+   * we will call uber if we are walking. Uber ride return format:
+   * (slat, slong, elat, elong).
+   */
+  $scope.getUberCoordinates = function(response, threshold) {
+     var steps = response.route[0].leg[0].maneuver;
+     var uber_info = [];
+     var trip_length = 0;
+     var continuing_trip = false;
+     var slat = 0;
+     var slong = 0;
+     var elat = 0;
+     var elong = 0;
+     for (i=0; i < steps.length - 1; i++) {
+       var step = steps[i];
+       if (step._type = "PrivateTransportManeuverType") {
+         if (!continuing_trip) {
+            slat = step.position.latitude;
+            slong = step.position.longitude;
+            continuing_trip = true;
+         }
+         trip_length += step.travelTime;
+       } else if (step._type = "PublicTransportManeuverType") {
+          if (trip_length >= threshold) {
+            elat = step.position.latitude;
+            elong = step.position.longitude;
+            continuing_trip = false;
+            uber_info.push((slat, slong, elat, elong));
+          }
+          trip_length = 0;
+       }
+     }
+     var step = steps[step.length - 1]; //Last step is always just arriving with 0 time.
+     if (trip_length >= threshold) {
+       elat = step.position.latitude;
+       elong = step.position.longitude;
+       uber_info.push((slat, slong, elat, elong));
+     }
+     return uber_info;
   }
 
   $scope.getPrivateTransportRoute = function(startLat, startLong, endLat, endLong) {
