@@ -207,7 +207,6 @@ app.directive('standardTimeNoMeridian', function() {
       // $scope.destAddressLastQuery = $scope.formData.destAddress;
       // $scope.destAddresses = [];  
     }, 3000);
-
   }
 
   $scope.onClickHere = function() {
@@ -222,6 +221,16 @@ app.directive('standardTimeNoMeridian', function() {
       }
     })
   }
+
+  $scope.onSelectDestination = function() {
+    console.log('search for ', $scope.formData.deptAddress);
+    $scope.getLocation("california memorial stadium", function(response) {
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      $scope.startPos = candidateAddressResults[0];
+      console.log($scope.startPos);
+    })
+  }
+
 
   $scope.getCurrentAddress = function(lati, longi) {
       var here_url = "http://reverse.geocoder.cit.api.here.com/6.2/reversegeocode.json" +
@@ -275,19 +284,23 @@ app.directive('standardTimeNoMeridian', function() {
     return results;
   }
 
+  $scope.getPublicTransportParams = function(startLat, startLong, endLat, endLong) {
+    return {
+      waypoint0: "geo!" + startLat + "," + startLong,
+      waypoint1: "geo!" + endLat + "," + endLong,
+      mode: "fastest;publicTransportTimeTable",
+      combineChange: "true",
+      representation: "display"
+      // arrival: //Add the correct time and date here. format:2013-09-09T12:44:56
+    }
+  }
   $scope.getPublicTransportRoute = function(startLat, startLong, endLat, endLong) {
     var here_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + HERE_APP_ID
     + "&app_code=" + HERE_APP_CODE;
     $http({
       method: 'GET',
       url: 'here_url',
-      params: {
-        waypoint0: "geo!" + startLat + "," + startLong,
-        waypoint1: "geo!" + endLat + "," + endLong,
-        mode: "fastest;publicTransportTimeTable",
-        combineChange: "true",
-        arrival: //Add the correct time and date here. format:2013-09-09T12:44:56
-      }
+      params: $scope.getPublicTransportParams(startLat, startLong, endLat, endLong)
     }).then(function successCallback(response) {
       // do something with the route we found.
     }, function errorCallback(response) {
@@ -302,7 +315,7 @@ app.directive('standardTimeNoMeridian', function() {
       method: "GET",
       url: "here_url",
       params: {
-        mode: "fastest;car;"
+        mode: "fastest;car;",
         waypoint0: "geo!" + startLat + "," + startLong,
         waypoint1: "geo!" + endLat + "," + endLong,
         departure: "2015-10-11T00:00:00" //Placeholder, replace with user date in same format.
@@ -314,7 +327,34 @@ app.directive('standardTimeNoMeridian', function() {
     });
   }
 
+  $scope.findRoute = function() {
+    $scope.getLocation($scope.formData.destAddress, function(response) {
+      // get target location first.
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      $scope.endPos = candidateAddressResults[0];
+      // compute a route.
+      if($scope.startPos && $scope.endPos) {
+        $scope.getPublicTransportParams(
+          $scope.startPos.location[0], 
+          $scope.startPos.location[1],
+          $scope.endPos.location[0],
+          $scope.endPos.location[1]
+        );
+      }
+    })
+  }
+
   $scope.callUber = function(deptAddress) {
+    $scope.getLocation($scope.formData.destAddress, function(response) {
+      // get target location first.
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      $scope.endPos = candidateAddressResults[0];
+      // compute a route.
+      if($scope.startPos && $scope.endPos) {
+
+      }
+    })
+
     console.log(deptAddress);
     var url = 'https://api.uber.com/v1/products';
     $(".box").append("<button class='button overflowShow' value='Reload Page' onClick='window.location.reload()'></button>");

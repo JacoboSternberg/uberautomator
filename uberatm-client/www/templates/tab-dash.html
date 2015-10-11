@@ -47,7 +47,7 @@
   <ion-content class="" scroll="false">
     <!-- <div class="overlay-spacer"></div> -->
 
-    <form ng-submit="">
+    <form ng-submit="findRoute()">
       <div class="list list-inset animate-show input-block" ng-show="showSourcePage">
         <label class="item item-input">
           <i class="icon ion-search placeholder-icon"></i>
@@ -73,7 +73,7 @@
           <!-- <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input> -->
         </label>
 
-        <button class="text-wrap button button-full button-positive site-block" style="z-index: 1;" ng-click="showSourcePage=false; showDestinationPage=true;">
+        <button class="text-wrap button button-full button-positive site-block" style="z-index: 1;" ng-click="showSourcePage=false; showDestinationPage=true; onSelectDestination();">
               Select Destination
         </button>
 
@@ -99,7 +99,7 @@
           </button>
 
           <button class="button button-full button-positive site-block" type = "submit" style="z-index: 0;">
-            Go Uber!
+            Find Route!
           </button>
         </label>
       </div>
