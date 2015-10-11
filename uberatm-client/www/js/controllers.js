@@ -63,7 +63,7 @@ app.directive('standardTimeNoMeridian', function() {
         } else {
           if (opType === 'time') {
             var hours = parseInt(val / 3600);
-            var minutes = (val / 60) % 60;
+            var minutes = parseInt((val / 60) % 60);
 
             if (hours >= 12) {
               am_pm = "PM";
@@ -94,7 +94,7 @@ app.directive('standardTimeNoMeridian', function() {
 
 })
 
-.controller('StartOverlayCtrl', function($scope, $http, $state) {
+.controller('StartOverlayCtrl', function($scope, $http, $state, $interval) {
   $scope.deptAddresses = [];
   $scope.destAddresses = [];
   $scope.formData = {};
@@ -106,8 +106,12 @@ app.directive('standardTimeNoMeridian', function() {
   $scope.car_ids = []
   $scope.latitude = -1;
   $scope.longitude = -1;
-  $scope.formData.showSourcePage = true;
-  $scope.formData.showDestinationPage = false;
+  $scope.formData.showPage = 0;
+  $scope.formData.nextStopName = "Home";
+  $scope.formData.nextUberMinutes = 5;
+  $scope.formData.travelStatus = -1; // 0 still, 1 public, 2 uber, 4 finished.
+  $scope.formData.uberCalledStatus = false;
+  $scope.formData.currentTime = 70000;
 
   // deciding which block of inputs to shown.
   $scope.input1Shown = true;
@@ -228,11 +232,13 @@ app.directive('standardTimeNoMeridian', function() {
       var candidateAddressResults = $scope.getCandidateAddress(response);
       var candidateAddressKeys = $scope.getCandidateAdressKeys(candidateAddressResults);
       $scope.startPos = candidateAddressResults[candidateAddressKeys[0]];
+      console.log('startPos', $scope.startPos);
       var marker = new H.map.Marker({
         lat: $scope.startPos.position[0],
         lng: $scope.startPos.position[1]
       });
       $scope.map.addObject(marker);
+      $scope.formData.showPage = 1;
     })
   }
 
@@ -249,6 +255,7 @@ app.directive('standardTimeNoMeridian', function() {
         $scope.endPos.position[0],
         $scope.endPos.position[1],
         $scope.drawRouteOnMap);
+      $scope.formData.showPage = 2;
     })
   }
 
@@ -339,7 +346,9 @@ app.directive('standardTimeNoMeridian', function() {
   }
 
   $scope.drawRouteOnMap = function(response) {
-    result = response.data;
+    var result = response.data;
+    console.log('route', result);
+    $scope.route = result.response.route[0].leg[0].maneuver;
     var map = $scope.map;
     var route,
       routeShape,
@@ -388,6 +397,9 @@ app.directive('standardTimeNoMeridian', function() {
       // Set the map's viewport to make the whole route visible:
       map.setViewBounds(routeLine.getBounds());
     }
+
+    // setup gogogo;
+    $scope.setup_gogogo($scope.route);
   }
 
   /**
@@ -433,8 +445,65 @@ app.directive('standardTimeNoMeridian', function() {
      }
      return uber_info;
    }
-  
 
+   /* a simplied version for demo */
+   $scope.getUberCoordinatesSimple = function(maneuver) {
+      var upperThres = 20 * 60, lowerThres = 300;
+      var slat = $scope.startPos.position[0];
+      var slong = $scope.startPos.position[1];
+      var elat = $scope.startPos.position[0];
+      var elong = $scope.startPos.position[1];
+      var distance = 0;
+      var uber_info = [];
+      for(var i = 0; i < maneuver.length - 1; i++) {
+        var step = maneuver[i];
+        if(step.travelTime < lowerThres) continue;
+        if(step.travelTime < upperThres) {
+          elat = step.position.latitude;
+          elong = step.position.longitude;
+          distance += step.length;
+        }else{
+          if(distance > 0) {
+            uber_info.push({
+              slat: slat,
+              slong: slong,
+              elat: elat,
+              elong: elong,
+              distance: distance,
+              travelTime: distance / 17.0,
+              type: 'uber',
+              instruction: step.instruction
+            });
+          }
+          uber_info.push({
+            slat: elat,
+            slong: elong,
+            elat: step.position.latitude,
+            elong: step.position.longitude,
+            distance: step.length,
+            travelTime: step.travelTime,
+            type: 'public'
+          });
+          distance = 0;
+          slat = step.position.latitude;
+          slong = step.position.longitude;
+        }
+      }
+      var step = maneuver[maneuver.length - 1];
+      if(distance > 0) {
+        uber_info.push({
+          slat: slat,
+          slong: slong,
+          elat: step.position.latitude,
+          elong: step.position.longitude,
+          distance: distance,
+          travelTime: distance / 17.0,
+          type: 'uber'
+        });
+      }
+      return uber_info;
+   }
+  
   $scope.getPrivateTransportRoute = function(startLat, startLong, endLat, endLong) {
     var here_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + HERE_APP_ID
     + "&app_code=" + HERE_APP_CODE;
@@ -472,7 +541,7 @@ app.directive('standardTimeNoMeridian', function() {
     function errorCallback(response) {
       console.log("error");
     };
-    $(".box .timeLeft p").html()
+    
     var eta = $scope.estimateUber($scope.car_ids);
     $(".box .eta p").html($scope.car_ids[eta]);
     //$(".box .callIn p").html($) // Unable to do this until we fix epochTime/create 
@@ -538,7 +607,7 @@ app.directive('standardTimeNoMeridian', function() {
 
   $scope.estimateUber = function(car_ids) {
     var url = "https://api.uber.com/v1/requests/estimate";
-    for (car in $scope.car_ids) {
+    for (car in car_ids) {
       var parameters = {
         'product_id': car,
         'start_latitude': $scope.latitude,
@@ -547,6 +616,201 @@ app.directive('standardTimeNoMeridian', function() {
       $http.post(url, parameters).then(function(response){$scope.times.push(response.pickup_estimate);}, function(response){console.log("error");});
     }
     return $scope.times.indexOf(Math.min.apply(Math, $scope.times));
+  }
+  $scope.getUberCarIds = function(lat, lng, callback) {
+    var url = "http://crossorigin.me/https://api.uber.com/v1/products";
+
+    var parameters = {
+        'server_token': '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf',
+        'latitude': lat,
+        'longitude': lng
+    };
+
+    $http({
+      method: 'GET',
+      url: url,
+      params: parameters
+    }).then(function successCallback(response) {
+      console.log('uber', response);
+      var car_ids = []
+      for (var product in response.data.products) {
+        car_ids.push(product.product_id);
+      }
+      callback(car_ids);
+      // do something with the route we found.
+    }, function errorCallback(response) {
+      console.log(response.status, "errorcode");
+    });
+  };
+
+  $scope.estimateUberEta = function(lat, lng, callback) {
+    // TODO: hack;
+    callback(Math.floor(Math.random() * 10));
+    return;
+
+    $scope.getUberCarIds(lat, lng, function(car_ids) {
+      var url = "http://crossorigin.me/https://api.uber.com/v1/requests/estimate";
+      var times = [];
+      if(car_ids.length == 0) 
+        return;
+      var car = car_ids[0];
+      var parameters = {
+        'product_id': car,
+        'start_latitude': $scope.latitude,
+        'start_longitude': $scope.longitude,
+      }    
+      $http({
+        method: 'POST',
+        url: url,
+        params: parameters
+      }).then(function successCallback(response) {
+        console.log('uber estimate', response);
+        callback(eta);
+        // do something with the route we found.
+      }, function errorCallback(response) {
+        console.log(response.status, "errorcode");
+        callback(Math.floor(Math.random() * 10));
+      });
+    })
+  }
+
+  $scope.setup_gogogo = function(manuver) {
+    var startTime = $scope.epochTime; 
+    $scope.startTime = startTime - 1800; // half an hour in advance.
+    $scope.speedX = 60;                    // how many X speed up for demo.
+    $scope.counter = 0;
+    $scope.lag = 3;                      // timer period in secons.
+    $scope.stage = -1;
+    // setInterval($scope.gogogo, $scope.lag * 1000);
+    var uber_info = $scope.getUberCoordinatesSimple(manuver);
+    console.log('uber', uber_info);
+    $scope.uber_info = uber_info;
+
+    // mimic.
+    // var time = $scope.startTime + 30 * 60;
+    // $scope.formData.currentTime = time;
+    // var nextTime = $scope.startTime;
+    // var stage = $scope.stage;
+    // var uber_info = $scope.uber_info;
+    // console.log('uber_info', uber_info);
+    // if(stage == -1) {
+    //   var lng = uber_info[0].slong;
+    //   var lat = uber_info[0].slat;
+    // }else{
+    //   var lng = uber_info[stage].elong;
+    //   var lat = uber_info[stage].elat;
+    // }
+    // $scope.estimateUberEta(lat, lng, function(eta) {
+    //   console.log('eta', eta);
+    //   console.log('time', time);
+    //   console.log('epochTime', $scope.epochTime);
+    //   // update stage.
+    //   if(time >= nextTime) {
+    //     if(uber_info[stage].type == 'public') {
+    //       $scope.formData.travelStatus = 1;
+    //     }else if(uber_info[stage].type == 'uber') {
+    //       $scope.formData.travelStatus = 2;
+    //     }
+    //     stage += 1;
+    //     if(stage == uber_info.length) {
+    //       $scope.formData.travelStatus = 4;
+    //     }
+    //   }
+
+    //   // show itinerary.
+    //   if($scope.formData.travelStatus == 0) {
+    //     if($scope.epochTime - time > eta * 60) {
+    //       $scope.formData.nextUberMinutes = ($scope.epochTime - time - eta * 60) / 60
+    //     }else{
+    //       $scope.formData.uberCalledStatus = true;
+    //     }
+    //   }else if($scope.formData.travelStatus == 1) { // public.
+
+    //   }
+    // });
+
+    $scope.nextTime = $scope.epochTime;
+    $scope.nextEta = 0;
+
+    var lng = uber_info[0].slong;
+    var lat = uber_info[0].slat;
+
+    $scope.map.setCenter({
+      lat: lat,
+      lng: lng
+    });
+
+    $scope.estimateUberEta(lat, lng, function(eta) {
+      $scope.nextEta = eta;
+      $scope.formData.travelStatus = 0;
+      $interval($scope.gogogo, 1000);
+    });
+  }
+
+  $scope.gogogo = function() {
+    var time = $scope.startTime + $scope.counter * $scope.lag * $scope.speedX;
+    
+    $scope.formData.currentTime = time;
+
+    var stage = $scope.stage;
+    var uber_info = $scope.uber_info;
+
+    console.log('time', time);
+    console.log('stage', stage);
+    console.log('uber_info', uber_info);
+    console.log('pos', lng, lat);
+
+    console.log('eta', $scope.nextEta);
+    console.log('status', $scope.formData.travelStatus)
+    // update stage.
+
+    if(time >= $scope.nextTime) {
+      stage += 1;
+      if(stage == uber_info.length) {
+        $scope.formData.travelStatus = 4;
+      }else{
+        $scope.map.setCenter({
+          lat: uber_info[stage].elat,
+          lng: uber_info[stage].elong,
+        });
+
+        $scope.stage = stage;
+        if(uber_info[stage].type == 'public') {
+          $scope.formData.travelStatus = 1;
+          $scope.nextTime = time + uber_info[stage].travelTime;
+          var lng = uber_info[stage].elong;
+          var lat = uber_info[stage].elat;
+          $scope.estimateUberEta(lat, lng, function(eta) {
+            $scope.nextEta = eta;
+          });
+        }else if(uber_info[stage].type == 'uber') {
+          $scope.formData.travelStatus = 2;
+          $scope.formData.uberCalledStatus = false;
+          if(uber_info[stage].instruction) {
+            $scope.formData.nextStopName = uber_info[stage].instruction;
+          }else{
+            $scope.formData.nextStopName = 'next stop';
+          }
+          $scope.nextTime = time + uber_info[stage].travelTime
+        }
+
+        document.getElementById('next-stop').innerHTML = $scope.formData.nextStopName;
+      }
+      
+    }
+
+    // show itinerary.
+    if($scope.formData.travelStatus == 0 || $scope.formData.travelStatus == 1) {
+      if($scope.nextTime - time > $scope.nextEta * 60) {
+        $scope.formData.nextUberMinutes = Math.floor(($scope.nextTime - time - $scope.nextEta * 60) / 60);
+      }else{
+        $scope.formData.uberCalledStatus = true;
+      }
+    }else{
+      $scope.formData.uberCalledStatus = false;
+    }
+
+    $scope.counter += 1;
   }
 
   $scope.getLocation("california memorial stadium", function(response) {

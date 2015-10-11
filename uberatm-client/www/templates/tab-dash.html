@@ -44,12 +44,11 @@
   <ion-content class="" scroll="false">
     <!-- <div class="overlay-spacer"></div> -->
 
-    <form ng-submit="onSelectDestination();">
-      <div class="list list-inset animate-show input-block" ng-show="formData.showSourcePage">
+      <div class="list list-inset animate-show input-block" ng-show="formData.showPage == 0">
         <label class="item item-input">
           <i class="icon ion-search placeholder-icon"></i>
           <input type="search" placeholder="Departure Location" ng-model="formData.deptAddress">
-          <button class="button button-light ion-location button-dark" on-tap="onClickHere()"></button>
+          <button class="button button-light ion-location" style="border: none;" on-tap="onClickHere()"></button>
 
         </label>
 
@@ -57,27 +56,25 @@
           <li class="item" ng-repeat="address in deptAddresses" ng-click="onSetDeptAddress(address)">{{address}}</li>
         </div>
 
-        <label class="item item-text-wrap">
-          <!-- <span class="input-label">Departure Time</span> -->
-          <ionic-timepicker input-obj="timePickerObject">
-            <button class="button button-block overflowShow site-block">
-              <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
-                <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
-              </strong>
-            </button>
-          </ionic-timepicker>
+        <!-- <span class="input-label">Departure Time</span> -->
+        <ionic-timepicker input-obj="timePickerObject">
+          <button class="button button-block overflowShow site-block">
+            <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
+              <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
+            </strong>
+          </button>
+        </ionic-timepicker>
 
           <!-- <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input> -->
-        </label>
 
-        <button class="text-wrap button button-full button-positive site-block" style="z-index: 1;" ng-click="formData.showSourcePage=false; formData.showDestinationPage=true; onSelectDeparture();">
+        <button class="button button-full button-positive site-block" style="z-index: 1;" ng-click="onSelectDeparture();">
               Start Here
         </button>
 
       </div>
 
 
-      <div class="list list-inset animate-show input-block" ng-show="formData.showDestinationPage">
+      <div class="list list-inset animate-show input-block" ng-show="formData.showPage == 1">
         <label class="item item-input">
           <i class="icon ion-search placeholder-icon"></i>
           <input type="search" placeholder="Destination Location" ng-model="formData.destAddress">
@@ -87,24 +84,38 @@
           <li class="item" ng-repeat="address in destAddresses" ng-click="onSetDestAddress(address)">{{address}}</li>
         </div>
 
-        <label class="item item-text-wrap" style="background-color: rgba(255,255,255,0.9);">
+        <button class="button button-full button-positive site-block" ng-click="onSelectDestination();">
+          Find Route!
+        </button>
 
-          <button class="button button-full site-block" style="z-index: 0;" ng-click="formData.showSourcePage=true; formData.showDestinationPage=false;">
+        <button class="button button-full site-block" style="z-index: 0;" ng-click="formData.showPage = 0">
               Back
           </button>
-                    
-
-          <button class="button button-full button-positive site-block" type = "submit" style="z-index: 0;">
-            Find Route!
-          </button>
-
-
-          
-        </label>
       </div>
 
-      </script>
-    </form>
+      <div class="list list-inset animate-show input-block" ng-show="formData.showPage == 2">
+        <div class="card">
+          <div class="item item-divider">
+            Itinerary &nbsp; <!-- <standard-time-no-meridian etime='currentTime'></standard-time-no-meridian> -->
+            <div ng-model="formData.currentTime"></div>
+          </div>
+          <div class="item item-text-wrap">
+            <h2 ng-show="formData.travelStatus == 0">About to departure </h2>
+            <h2 ng-show="formData.travelStatus == 1 || formData.travelStatus == 2">About to arrive at/take
+            <br><u id="next-stop"></u> </h2>
+            <h2 ng-show="formData.travelStatus == 4">You have finished your journey.</u> </h2>
+
+            <h3 ng-show="(formData.travelStatus == 0 || formData.travelStatus == 1) && !formData.uberCalledStatus">Calling next Uber in <u>{{formData.nextUberMinutes}}</u> min.</h3>
+
+            <h3 ng-show="formData.uberCalledStatus">Uber coming.</h3>
+
+            <h3 ng-show="formData.travelStatus == 2">Riding an Uber</h3>
+          </div>
+        </div>
+      </div>
+
+
+
 
   </ion-content>
 
