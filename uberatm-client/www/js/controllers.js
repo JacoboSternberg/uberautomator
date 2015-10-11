@@ -288,10 +288,16 @@ app.directive('standardTimeNoMeridian', function() {
             }else if(hours == 0) {
               hours += 12;
             }
-
-            return (prependZero(hours) + " : " + prependZero(minutes)) + " " + am_pm;
+            return ($scope.prependZero(hours) + " : " + $scope.prependZero(minutes)) + " " + am_pm;
           }
         }
+      }
+
+  $scope.prependZero = function(param) {
+        if (String(param).length < 2) {
+          return "0" + String(param);
+        }
+        return param;
       }
 
   $scope.estimateUber = function(car_ids) {
