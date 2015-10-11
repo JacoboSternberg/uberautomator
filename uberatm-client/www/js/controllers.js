@@ -96,13 +96,20 @@ app.directive('standardTimeNoMeridian', function() {
 })
 
 .controller('StartOverlayCtrl', function($scope, $http) {
-  $scope.addresses = [];
-  $scope.deptAddress = "";
+  $scope.deptAddresses = [];
+  $scope.destAddresses = [];
+  $scope.formData = {};
   $scope.addressQueryInProcess = false;
-  $scope.addressQueryOnWait = "";
+  $scope.deptAddressLastQuery = "";
+  $scope.destAddressLastQuery = "";
   $scope.candidateAddressResults = {}
   $scope.latitude = -1;
   $scope.longitude = -1;
+  $scope.showSourcePage = true;
+  $scope.showDestinationPage = false;
+
+  // deciding which block of inputs to shown.
+  $scope.input1Shown = true;
 
   $scope.useCurrentPosition = function(position) {
      $scope.latitude = position.coords.latitude;
@@ -120,22 +127,21 @@ app.directive('standardTimeNoMeridian', function() {
      console.log("Unable to find current location");
   }
 
-  $scope.onAddressChange = function (deptAddress) {
-    if(deptAddress == "" || $scope.latitude == -1) {
-      $scope.addresses = [];
+  // autocompletion for departure address.
+  setInterval(function() {
+    var deptAddress = $scope.formData.deptAddress;
+    if(!deptAddress || deptAddress == "" || $scope.latitude == -1) {
+      $scope.deptAddresses = []
       return;
     }
-
+    if(deptAddress == $scope.deptAddressLastQuery) {
+      return;
+    }
     if($scope.addressQueryInProcess == true) {
-      $scope.addressQueryOnWait = deptAddress;
-      setTimeout(function() {
-        $scope.onAddressChange($scope.addressQueryOnWait);
-      }, 100);
       return;
     }
-
+    // start auto-completion.
     $scope.addressQueryInProcess = true;
-
     $scope.getLocation(deptAddress, function(response) {        
       console.log('response', response);
       var candidateAddressResults = $scope.getCandidateAdresses(response);
@@ -144,10 +150,62 @@ app.directive('standardTimeNoMeridian', function() {
       for(var key in candidateAddressResults) {
         addresses.push(key);
       }
-      $scope.addresses = addresses.slice(0, 3);
+      $scope.deptAddresses = addresses.slice(0, 3);
       $scope.addressQueryInProcess = false;
+      $scope.deptAddressLastQuery = deptAddress;
     });
-    
+  }, 300);
+
+  // autocompletion for destination address.
+  setInterval(function() {
+    var targetAddress = $scope.formData.destAddress;
+    if(!targetAddress || targetAddress == "" || $scope.latitude == -1) {
+      $scope.destAddresses = [];
+      return;
+    }
+    if(targetAddress == $scope.destAddressLastQuery) {
+      return;
+    }
+    if($scope.addressQueryInProcess == true) {
+      return;
+    }
+    // start auto-completion.
+    $scope.addressQueryInProcess = true;
+    $scope.getLocation(targetAddress, function(response) {        
+      console.log('response', response);
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      $scope.candidateAddressResults = candidateAddressResults;
+      addresses = []
+      for(var key in candidateAddressResults) {
+        addresses.push(key);
+      }
+      $scope.destAddresses = addresses.slice(0, 3);
+      $scope.addressQueryInProcess = false;
+      $scope.destAddressLastQuery = targetAddress;
+    });
+  }, 300);
+
+  $scope.onSetDeptAddress = function(address) {
+    console.log('on set', address);
+    $scope.deptAddressLastQuery = address;
+    $scope.formData.deptAddress = address;
+    $scope.deptAddresses = [];
+    setTimeout(function() {
+      // $scope.deptAddressLastQuery = $scope.formData.deptAddress;
+      // $scope.formData.deptAddress = address;
+      // $scope.addresses = [];  
+    }, 3000);
+  }
+
+  $scope.onSetDestAddress = function(address) {
+    $scope.formData.destAddress = address;
+    $scope.destAddressLastQuery = $scope.formData.destAddress;
+    $scope.destAddresses = [];  
+    setTimeout(function() {
+      // $scope.formData.destAddress = address;
+      // $scope.destAddressLastQuery = $scope.formData.destAddress;
+      // $scope.destAddresses = [];  
+    }, 3000);
   }
 
   $scope.onClickHere = function() {
@@ -158,7 +216,7 @@ app.directive('standardTimeNoMeridian', function() {
         addresses.push(key);
       }
       if(addresses.length > 0) {
-        $scope.deptAddress = addresses[0];
+        $scope.formData.deptAddress = addresses[0];
       }
     })
   }
