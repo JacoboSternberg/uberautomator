@@ -179,6 +179,19 @@ app.directive('standardTimeNoMeridian', function() {
     $scope.deptAddress = "Here"
   }
 
+  $scope.getCurrentAddress = function(lati, longi) {
+      var here_url = "http://reverse.geocoder.cit.api.here.com/6.2/reversegeocode.json" +
+	  "geocode.json?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg&gen=9";
+      $http({
+	  method: 'GET',
+	  url: here_url,
+	  params: {mode: "retrieveAdresses", prox: lati + "," + longi}
+      }).then(function successCallback(response) {
+	  return response.data;
+      }, function errorCallback(response) {
+	  console.log(response, "errorcode");
+      });
+  }
 
   $scope.getLocation = function (user_address, callback) {
     var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg";
