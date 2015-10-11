@@ -1,13 +1,13 @@
 angular.module('starter.controllers', [])
 
 .controller('DashCtrl', function($scope) {
-  $scope.pubTransportBool = true;      
+  $scope.pubTransportBool = true;
 
   $scope.publicTransportation = function(){
     if (pubTransportBool) {
-      //Display map 
+      //Display map
     } else {
-      // Google URL change 
+      // Google URL change
     }
   };
 
@@ -19,7 +19,7 @@ angular.module('starter.controllers', [])
       console.log('Selected epoch is : ', val, 'and the time is ', selectedTime.getUTCHours(), ':', selectedTime.getUTCMinutes(), 'in UTC');
       $scope.epochTime = val;
     }
-  }  
+  }
 
   $scope.epochTime = 27000;
 
@@ -92,7 +92,7 @@ app.directive('standardTimeNoMeridian', function() {
 })
 
 .controller('StartUnderCtrl', function($scope) {
-  
+
 })
 
 .controller('StartOverlayCtrl', function($scope, $http) {
@@ -165,7 +165,7 @@ app.directive('standardTimeNoMeridian', function() {
 
     $scope.addressQueryInProcess = true;
 
-    $scope.getLocation(deptAddress, function(response) {        
+    $scope.getLocation(deptAddress, function(response) {
       console.log('response', response);
       $scope.getCandidateAdresses(response, function(candidateAddressResults) {
         $scope.candidateAddressResults = candidateAddressResults;
@@ -177,7 +177,7 @@ app.directive('standardTimeNoMeridian', function() {
         $scope.addressQueryInProcess = false;
       });
     });
-    
+
   }
 
   $scope.onClickHere = function() {
@@ -189,18 +189,21 @@ app.directive('standardTimeNoMeridian', function() {
       var here_url = "http://reverse.geocoder.cit.api.here.com/6.2/reversegeocode.json" +
 	  "geocode.json?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg&gen=9";
       $http({
-	  method: 'GET',
-	  url: here_url,
-	  params: {mode: "retrieveAdresses", prox: lati + "," + longi}
+	      method: 'GET',
+	      url: here_url,
+	      params: {
+          mode: "retrieveAdresses",
+          prox: lati + "," + longi
+        }
       }).then(function successCallback(response) {
-	  return response.data;
+	       return response.data;
       }, function errorCallback(response) {
-	  console.log(response, "errorcode");
+	       console.log(response, "errorcode");
       });
   }
 
   $scope.getLocation = function (user_address, callback) {
-    var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=" + HERE_APP_ID 
+    var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=" + HERE_APP_ID
     + "&app_code=" + HERE_APP_CODE;
     console.log('get');
     $http({
@@ -232,6 +235,45 @@ app.directive('standardTimeNoMeridian', function() {
       }
     }
     callback(results);
+  }
+
+  $scope.getPublicTransportRoute = function(startLat, startLong, endLat, endLong) {
+    var here_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + HERE_APP_ID
+    + "&app_code=" + HERE_APP_CODE;
+    $http({
+      method: 'GET',
+      url: 'here_url',
+      params: {
+        waypoint0: "geo!" + startLat + "," + startLong,
+        waypoint1: "geo!" + endLat + "," + endLong,
+        mode: "fastest;publicTransportTimeTable",
+        combineChange: "true",
+        arrival: //Add the correct time and date here. format:2013-09-09T12:44:56
+      }
+    }).then(function successCallback(response) {
+      // do something with the route we found.
+    }, function errorCallback(response) {
+      console.log(response.status, "errorcode");
+    });
+  }
+
+  $scope.getPrivateTransportRoute = function(startLat, startLong, endLat, endLong) {
+    var here_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + HERE_APP_ID
+    + "&app_code=" + HERE_APP_CODE;
+    $http({
+      method: "GET",
+      url: "here_url",
+      params: {
+        mode: "fastest;car;"
+        waypoint0: "geo!" + startLat + "," + startLong,
+        waypoint1: "geo!" + endLat + "," + endLong,
+        departure: "2015-10-11T00:00:00" //Placeholder, replace with user date in same format.
+      }
+    }).then(function successCallback(response) {
+      console.log("Call worked for private");
+    }, function errorCallback(response) {
+      console.log(response.status, "errorcode");
+    });
   }
 
   $scope.callUber = function(deptAddress) {
@@ -310,7 +352,7 @@ app.directive('standardTimeNoMeridian', function() {
         'start_longitude': $scope.longitude,
         'end_latitude': null, // Either user inputted location or HERE maps deteremined location
         'end_longitude': null// Same as above
-      }    
+      }
       $http.post(url, parameters).then(
         function(response){
           times.push(response.pickup_estimate);
