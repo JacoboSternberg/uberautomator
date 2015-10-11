@@ -1,0 +1,20 @@
+<ion-view view-title="Automater">
+  <ion-content class="padding">
+  	<div ng-controller="DashCtrl">
+	  	<form ng-submit="callUber()">
+		    <ionic-timepicker input-obj="timePickerObject">
+		        <button class="button button-positive overflowShow site-block">
+		            <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
+		              <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
+		            </strong>
+		        </button>
+		    </ionic-timepicker>
+
+		    <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input>
+		    <button type = "submit" class="site-block"> Make Plan! </button>
+		</form>
+	</div>
+
+
+  </ion-content>
+</ion-view>
