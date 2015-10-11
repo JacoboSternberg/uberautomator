@@ -182,18 +182,17 @@ app.directive('standardTimeNoMeridian', function() {
 
   $scope.getLocation = function (user_address, callback) {
     var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg";
-    console.log('get');
     $http({
       method: 'GET',
       url: here_url,
       params: {
-        q: user_address, 
+        q: user_address,
         at: $scope.latitude + "," + $scope.longitude
       }
     }).then(function successCallback(response) {
       //The request worked. Do some display stuff.
+      callback(response)
       console.log(response);
-      callback(response);
       // callback(addresses);
       // var latitude = address.Response.View.Result.Location.NavigationPosition.Latitude;
       // var longitude = address.Response.View.Result.Location.NavigationPosition.Longitude;
@@ -216,24 +215,82 @@ app.directive('standardTimeNoMeridian', function() {
 
   $scope.callUber = function(deptAddress) {
     console.log(deptAddress);
-    $scope.getLocation(deptAddress, $scope.getCandidateAdresses);
-
-    return;
-    $scope.longitude = 1;
-    $scope.latitude = 1;
     var url = 'https://api.uber.com/v1/products';
-    var parameters = {
-        'server_token': 'INSERT_SERVER_TOKEN_HERE',
-        'latitude': scope.latitude,
-        'longitude': scope.longitude
-    };
-    $http.get(url, parameters).then(successCallback, errorCallback);
+    $(".box").append("<button class='button overflowShow' value='Reload Page' onClick='window.location.reload()'></button>");
+    $(".box").append("<div class='timeLeft'> Time left: </div>");
+    $(".box").append("<div class='eta'> ETA: </div>");
+    $(".box").append("<div class='callIn'> Calling Uber in: </div>");
+    while (true) {
+      var car_ids = []
+      $scope.getLocation(deptAddress, $scope.getCandidateAdresses);
+      var parameters = {
+          'server_token': '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf',
+          'latitude': scope.latitude,
+          'longitude': scope.longitude
+      };
+      $http.get(url, parameters).then(successCallback, errorCallback);
     function successCallback(response) {
-
+      for (var product in response.products) {
+        car_ids.push(product.product_id);
+      }
     };
     function errorCallback(response) {
 
     };
+    $(".box .eta").append(estimateUber(car_ids));
+    $(".box .timeLeft").append($scope.epochParser($scope.epochTime - $.now(), "time"));
+    // We should be able to create a server in order to store user's time request data.
 
+    // Top: Map of uber drivers nearby
+    // Middle-bottom: Time left until requested time, minimum ETA of driver
+    // Driver ETA: calling in [(time left - minimum ETA)]
+    }
+  }
+
+  $scope.epochParser = function (val, opType) {
+        var am_pm = "AM"
+        if (val === null) {
+          return "00 : 00 " + am_pm;
+        } else {
+          if (opType === 'time') {
+            var hours = parseInt(val / 3600);
+            var minutes = (val / 60) % 60;
+
+            if (hours >= 12) {
+              am_pm = "PM";
+            }else{
+              am_pm = "AM";
+            }
+
+            if (hours >= 13) {
+              hours -= 12;
+            }else if(hours == 0) {
+              hours += 12;
+            }
+
+            return (prependZero(hours) + " : " + prependZero(minutes)) + " " + am_pm;
+          }
+        }
+      }
+
+  $scope.estimateUber = function(car_ids) {
+    times = []
+    var url = 'https://api.uber.com/v1/requests/estimate';
+    for (car in car_ids) {
+      var parameters = {
+        'product_id': car,
+        'start_latitude': $scope.latitude,
+        'start_longitude': $scope.longitude,
+        'end_latitude': null, // Either user inputted location or HERE maps deteremined location
+        'end_longitude': null// Same as above
+      }    
+      $http.post(url, parameters).then(
+        function(response){
+          times.push(response.pickup_estimate);
+        }, function(response){
+          console.log("error");
+        });
+    }
+    return Math.min.apply(Math, times);
   }
 })

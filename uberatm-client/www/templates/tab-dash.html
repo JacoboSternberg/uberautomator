@@ -4,7 +4,7 @@
   </ion-content>
 </ion-view> -->
 
-
+<div class="box">
 <ion-pane frost ng-controller="StartUnderCtrl">
   <ion-content scroll="false">
     <map on-create="mapCreated(map)"></map>
@@ -37,7 +37,7 @@
         <label class="item item-text-wrap">
           <!-- <span class="input-label">Departure Time</span> -->
           <ionic-timepicker input-obj="timePickerObject">
-            <button class="button button-block overflowShow site-block">
+            <button class="button overflowShow site-block">
               <strong etime="timePickerObject.inputEpochTime" class="ng-binding">
                 <standard-time-no-meridian etime='epochTime'></standard-time-no-meridian>
               </strong>
@@ -47,14 +47,12 @@
           <!-- <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input> -->
         </label>
 
-        <button class="button button-full button-positive site-block" type = "submit">
+        <button class="button button-positive site-block" type = "submit">
             Go Uber!
           </button>
-
-        
-        
       </div>
     </form>
 
   </ion-content>
 </ion-pane>
+</div>
