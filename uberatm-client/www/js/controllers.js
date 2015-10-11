@@ -1,13 +1,13 @@
 angular.module('starter.controllers', [])
 
 .controller('DashCtrl', function($scope) {
-  $scope.pubTransportBool = true;      
+  $scope.pubTransportBool = true;
 
   $scope.publicTransportation = function(){
     if (pubTransportBool) {
-      //Display map 
+      //Display map
     } else {
-      // Google URL change 
+      // Google URL change
     }
   };
 
@@ -18,7 +18,7 @@ angular.module('starter.controllers', [])
       var selectedTime = new Date(val * 1000);
       $scope.epochTime = val;
     }
-  }  
+  }
 
   $scope.epochTime = 27000;
 
@@ -91,31 +91,30 @@ app.directive('standardTimeNoMeridian', function() {
 })
 
 .controller('StartUnderCtrl', function($scope) {
-  
+
 })
 
 .controller('StartOverlayCtrl', function($scope, $http, $state) {
-  $scope.addresses = [];
-  $scope.deptAddress = "";
+  $scope.deptAddresses = [];
+  $scope.destAddresses = [];
+  $scope.formData = {};
   $scope.addressQueryInProcess = false;
-  $scope.addressQueryOnWait = "";
+  $scope.deptAddressLastQuery = "";
+  $scope.destAddressLastQuery = "";
   $scope.candidateAddressResults = {}
   $scope.times = []
   $scope.car_ids = []
   $scope.latitude = -1;
   $scope.longitude = -1;
+  $scope.showSourcePage = true;
+  $scope.showDestinationPage = false;
+
+  // deciding which block of inputs to shown.
+  $scope.input1Shown = true;
 
   $scope.useCurrentPosition = function(position) {
      $scope.latitude = position.coords.latitude;
      $scope.longitude = position.coords.longitude;
-     function setCenter() {
-       if($scope.map) {
-          $scope.map.setCenter($scope.latitude, $scope.longitude);
-       }else{
-          setTimeout(setCenter, 100);
-       }
-     }
-     setCenter();
   }
 
   $scope.mapCreated = function(map, ui) {
@@ -123,87 +122,127 @@ app.directive('standardTimeNoMeridian', function() {
     $scope.ui = ui;
   };
 
-  $scope.centerOnMe = function () {
-    console.log("Centering");
-    if (!$scope.map) {
-      return;
-    }
-
-    $scope.loading = $ionicLoading.show({
-      content: 'Getting current location...',
-      showBackdrop: false
-    });
-
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      console.log('Got pos', pos);
-      $scope.map.setCenter(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
-      $scope.loading.hide();
-    }, function (error) {
-      alert('Unable to get location: ' + error.message);
-    });
-  };
-
-
   if (navigator.geolocation) {
      navigator.geolocation.getCurrentPosition($scope.useCurrentPosition);
   } else {
      console.log("Unable to find current location");
   }
 
-  $scope.onAddressChange = function (deptAddress) {
-    if(deptAddress == "" || $scope.latitude == -1) {
-      $scope.addresses = [];
+  // autocompletion for departure address.
+  setInterval(function() {
+    var deptAddress = $scope.formData.deptAddress;
+    if(!deptAddress || deptAddress == "" || $scope.latitude == -1) {
+      $scope.deptAddresses = []
       return;
     }
-
+    if(deptAddress == $scope.deptAddressLastQuery) {
+      return;
+    }
     if($scope.addressQueryInProcess == true) {
-      $scope.addressQueryOnWait = deptAddress;
-      setTimeout(function() {
-        $scope.onAddressChange($scope.addressQueryOnWait);
-      }, 100);
       return;
     }
-
+    // start auto-completion.
     $scope.addressQueryInProcess = true;
 
-    $scope.getLocation(deptAddress, function(response) {        
+    $scope.getLocation(deptAddress, function(response) {
       console.log('response', response);
-      $scope.getCandidateAdresses(response, function(candidateAddressResults) {
-        $scope.candidateAddressResults = candidateAddressResults;
-        addresses = []
-        for(var key in candidateAddressResults) {
-          addresses.push(key);
-        }
-        $scope.addresses = addresses.slice(0, 3);
-        $scope.addressQueryInProcess = false;
-      });
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      $scope.candidateAddressResults = candidateAddressResults;
+      addresses = []
+      for(var key in candidateAddressResults) {
+        addresses.push(key);
+      }
+      $scope.deptAddresses = addresses.slice(0, 3);
+      $scope.addressQueryInProcess = false;
+      $scope.deptAddressLastQuery = deptAddress;
     });
-    
+  }, 300);
+
+  // autocompletion for destination address.
+  setInterval(function() {
+    var targetAddress = $scope.formData.destAddress;
+    if(!targetAddress || targetAddress == "" || $scope.latitude == -1) {
+      $scope.destAddresses = [];
+      return;
+    }
+    if(targetAddress == $scope.destAddressLastQuery) {
+      return;
+    }
+    if($scope.addressQueryInProcess == true) {
+      return;
+    }
+    // start auto-completion.
+    $scope.addressQueryInProcess = true;
+    $scope.getLocation(targetAddress, function(response) {        
+      console.log('response', response);
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      $scope.candidateAddressResults = candidateAddressResults;
+      addresses = []
+      for(var key in candidateAddressResults) {
+        addresses.push(key);
+      }
+      $scope.destAddresses = addresses.slice(0, 3);
+      $scope.addressQueryInProcess = false;
+      $scope.destAddressLastQuery = targetAddress;
+    });
+  }, 300);
+
+  $scope.onSetDeptAddress = function(address) {
+    console.log('on set', address);
+    $scope.deptAddressLastQuery = address;
+    $scope.formData.deptAddress = address;
+    $scope.deptAddresses = [];
+    setTimeout(function() {
+      // $scope.deptAddressLastQuery = $scope.formData.deptAddress;
+      // $scope.formData.deptAddress = address;
+      // $scope.addresses = [];  
+    }, 3000);
+  }
+
+  $scope.onSetDestAddress = function(address) {
+    $scope.formData.destAddress = address;
+    $scope.destAddressLastQuery = $scope.formData.destAddress;
+    $scope.destAddresses = [];  
+    setTimeout(function() {
+      // $scope.formData.destAddress = address;
+      // $scope.destAddressLastQuery = $scope.formData.destAddress;
+      // $scope.destAddresses = [];  
+    }, 3000);
+
   }
 
   $scope.onClickHere = function() {
-    console.log('clicked')
-    $scope.deptAddress = "Here"
+    $scope.getLocation("*", function(response) {
+      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      addresses = []
+      for(var key in candidateAddressResults) {
+        addresses.push(key);
+      }
+      if(addresses.length > 0) {
+        $scope.formData.deptAddress = addresses[0];
+      }
+    })
   }
 
   $scope.getCurrentAddress = function(lati, longi) {
       var here_url = "http://reverse.geocoder.cit.api.here.com/6.2/reversegeocode.json" +
 	  "geocode.json?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg&gen=9";
       $http({
-	  method: 'GET',
-	  url: here_url,
-	  params: {mode: "retrieveAdresses", prox: lati + "," + longi}
+	      method: 'GET',
+	      url: here_url,
+	      params: {
+          mode: "retrieveAdresses",
+          prox: lati + "," + longi
+        }
       }).then(function successCallback(response) {
-	  return response.data;
+	       return response.data;
       }, function errorCallback(response) {
-	  console.log(response, "errorcode");
+	       console.log(response, "errorcode");
       });
   }
 
   $scope.getLocation = function (user_address, callback) {
-    var HERE_APP_ID='evk3TrU4UcresAseG8Da';
-    var HERE_APP_CODE='z4yYohROherMZ57eHTsQUg';
-    var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=" + HERE_APP_ID 
+    var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=" + HERE_APP_ID
     + "&app_code=" + HERE_APP_CODE;
     $http({
       method: 'GET',
@@ -214,15 +253,19 @@ app.directive('standardTimeNoMeridian', function() {
       }
     }).then(function successCallback(response) {
       //The request worked. Do some display stuff.
-      //callback(response)
-      console.log(response.results);
+      callback(response);
+      console.log(response);
+      // callback(addresses);
+      // var latitude = address.Response.View.Result.Location.NavigationPosition.Latitude;
+      // var longitude = address.Response.View.Result.Location.NavigationPosition.Longitude;
+      // $scope.callUber(); //We now call uber since it worked
     }, function errorCallback(resonse) {
       console.log("error");
       //Display error in the UI
     });
   }
 
-  $scope.getCandidateAdresses = function(response, callback) {
+  $scope.getCandidateAdresses = function(response) {
     var results = {}
     if(response.data.results.items.length > 0) {
       for(var result of response.data.results.items) {
@@ -230,7 +273,46 @@ app.directive('standardTimeNoMeridian', function() {
         results[title] = result;
       }
     }
-    callback(results);
+    return results;
+  }
+
+  $scope.getPublicTransportRoute = function(startLat, startLong, endLat, endLong) {
+    var here_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + HERE_APP_ID
+    + "&app_code=" + HERE_APP_CODE;
+    $http({
+      method: 'GET',
+      url: 'here_url',
+      params: {
+        waypoint0: "geo!" + startLat + "," + startLong,
+        waypoint1: "geo!" + endLat + "," + endLong,
+        mode: "fastest;publicTransportTimeTable",
+        combineChange: "true",
+        arrival: //Add the correct time and date here. format:2013-09-09T12:44:56
+      }
+    }).then(function successCallback(response) {
+      // do something with the route we found.
+    }, function errorCallback(response) {
+      console.log(response.status, "errorcode");
+    });
+  }
+
+  $scope.getPrivateTransportRoute = function(startLat, startLong, endLat, endLong) {
+    var here_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + HERE_APP_ID
+    + "&app_code=" + HERE_APP_CODE;
+    $http({
+      method: "GET",
+      url: "here_url",
+      params: {
+        mode: "fastest;car;"
+        waypoint0: "geo!" + startLat + "," + startLong,
+        waypoint1: "geo!" + endLat + "," + endLong,
+        departure: "2015-10-11T00:00:00" //Placeholder, replace with user date in same format.
+      }
+    }).then(function successCallback(response) {
+      console.log("Call worked for private");
+    }, function errorCallback(response) {
+      console.log(response.status, "errorcode");
+    });
   }
 
   $scope.callUber = function(curr_long, curr_lat) {
@@ -271,6 +353,7 @@ app.directive('standardTimeNoMeridian', function() {
       $(".map").html("<img src='" + map + "></img>");
     }
     //$(".box .timeLeft p").html($scope.epochParser($scope.epochTime - $.now()/1000, "time"));
+
     // We should be able to create a server in order to store user's time request data.
 
     // Top: Map of uber drivers nearby

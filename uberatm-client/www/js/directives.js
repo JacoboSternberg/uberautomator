@@ -34,7 +34,8 @@ angular.module('starter.directives', ['ngCordova'])
           var mapEvents = new H.mapevents.MapEvents(map);
           var behavior = new H.mapevents.Behavior(mapEvents);
 
-          var ui = H.ui.UI.createDefault(map, defaultLayers);
+          // var ui = H.ui.UI.createDefault(map, defaultLayers);
+          var ui = null;  // no ui components.
 
           $scope.onCreate({
             map: map,

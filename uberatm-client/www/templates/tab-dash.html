@@ -4,20 +4,57 @@
   </ion-content>
 </ion-view>
  -->
+<style>
+.input-block {
+  display: block; 
+  width: 95%;
+  left: auto;
+  right: auto;
+  position: absolute; 
+  background-color: rgba(255,255,255,0.0);
+}
+
+.animate-show {
+  line-height: 20px;
+  /*-webkit-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;*/
+  opacity: 1;
+  z-index: 1;
+}
+
+.animate-show.ng-hide-add, .animate-show.ng-hide-remove {
+  /*-webkit-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;*/
+  z-index: 0;
+}
+
+.animate-show.ng-hide {
+  opacity: 0;
+}
+
+.text-wrap {
+  width: 99% !important;
+  left: auto !important;
+  right: auto !important;
+}
+
+</style>
+
  <ion-pane ng-controller="StartOverlayCtrl" class="dark-overlay" style="z-index: 1;">
   <ion-content class="" scroll="false">
     <!-- <div class="overlay-spacer"></div> -->
 
-    <form ng-submit="callUber(deptAddress)">
-      <div class="list list-inset">
+    <form ng-submit="">
+      <div class="list list-inset animate-show input-block" ng-show="showSourcePage">
         <label class="item item-input">
           <i class="icon ion-search placeholder-icon"></i>
-          <input type="search" placeholder="Departure Location" ng-model="deptAddress" ng-change="onAddressChange(deptAddress)">
+          <input type="search" placeholder="Departure Location" ng-model="formData.deptAddress">
           <button class="button button-light ion-location button-dark" on-tap="onClickHere()"></button>
+
         </label>
 
-        <div class="list" ng-if="addresses.length > 0">
-          <li class="item" ng-repeat="address in addresses">{{address}}</li>
+        <div class="list" ng-if="deptAddresses.length > 0" style="z-index: 10;">
+          <li class="item" ng-repeat="address in deptAddresses" ng-click="onSetDeptAddress(address)">{{address}}</li>
         </div>
 
         <label class="item item-text-wrap">
@@ -32,11 +69,35 @@
 
           <!-- <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input> -->
         </label>
+        <button class="text-wrap button button-full button-positive site-block" style="z-index: 1;" ng-click="showSourcePage=false; showDestinationPage=true;">
+              Select Destination
+        </button>
 
-        <button class="button button-full button-positive site-block" type="submit" style="z-index: 1;">
+      </div>
+
+
+      <div class="list list-inset animate-show input-block" ng-show="showDestinationPage">
+        <label class="item item-input">
+          <i class="icon ion-search placeholder-icon"></i>
+          <input type="search" placeholder="Destination Location" ng-model="formData.destAddress">
+        </label>
+
+        <div class="list" ng-if="destAddresses.length > 0" style="z-index: 10;">
+          <li class="item" ng-repeat="address in destAddresses" ng-click="onSetDestAddress(address)">{{address}}</li>
+        </div>
+
+        <label class="item item-text-wrap" style="background-color: rgba(255,255,255,0.9);">
+          <button class="button button-full site-block" style="z-index: 1;" ng-click="showSourcePage=true; showDestinationPage=false;">
+              Back
+          </button>
+
+          <button class="button button-full button-positive site-block" type = "submit" style="z-index: 0;">
             Go Uber!
           </button>
+        </label>
       </div>
+
+      </script>
     </form>
 
   </ion-content>
