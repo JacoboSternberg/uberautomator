@@ -246,8 +246,8 @@ app.directive('standardTimeNoMeridian', function() {
       $scope.getLocation(deptAddress, $scope.getCandidateAdresses);
       var parameters = {
           'server_token': '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf',
-          'latitude': scope.latitude,
-          'longitude': scope.longitude
+          'latitude': $scope.latitude,
+          'longitude': $scope.longitude
       };
       $http.get(url, parameters).then(successCallback, errorCallback);
     function successCallback(response) {
