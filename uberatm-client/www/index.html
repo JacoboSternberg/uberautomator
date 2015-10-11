@@ -17,7 +17,9 @@
     <script src="lib/ionic/js/ionic.bundle.js"></script>
 
     <!-- cordova script (this will be a 404 during development) -->
+    <script src="js/ng-cordova.min.js"></script>
     <script src="cordova.js"></script>    
+
 
     <!-- lib: create overlay effect -->
     <script src="lib/ionic-timepicker/dist/ionic-timepicker.bundle.min.js"></script>
@@ -28,6 +30,18 @@
 
     <!-- TODO: replace with Here. map api -->
     <!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB16sGmIekuGIvYOfNoW9T44377IU2d2Es&sensor=true"></script>-->
+
+    <script src="https://js.api.here.com/v3/3.0/mapsjs-core.js" 
+      type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.api.here.com/v3/3.0/mapsjs-service.js" 
+      type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.api.here.com/v3/3.0/mapsjs-ui.js" 
+      type="text/javascript" charset="utf-8"></script>
+    <script src="https://js.api.here.com/v3/3.0/mapsjs-mapevents.js" 
+      type="text/javascript" charset="utf-8"></script>
+
+   <link rel="stylesheet" type="text/css" 
+          href="https://js.api.here.com/v3/3.0/mapsjs-ui.css" />
 
     <!-- your app's js -->
     <script src="js/app.js"></script>
@@ -43,8 +57,8 @@
       }
 
       .dark-overlay {
-        background-color: #222;
-        opacity: 0.8;
+        background-color:rgba(20, 20, 20, 0.0);;
+        opacity: 1;
       }
 
       .dark-item {
@@ -62,6 +76,12 @@
       .overlay-spacer {
         height: 100px;
       }
+
+
+      /*.pointer-parent * {
+        pointer-events: auto;
+      }*/
+
     </style>
   </head>
   <body ng-app="starter">

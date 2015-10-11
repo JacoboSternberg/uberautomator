@@ -5,6 +5,9 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
+HERE_APP_ID = "evk3TrU4UcresAseG8Da";
+HERE_APP_CODE = "z4yYohROherMZ57eHTsQUg";
+
 app = angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'starter.directives', 'ionic-timepicker', 'ionic.contrib.frost']);
 
 app.run(function($ionicPlatform) {

@@ -36,11 +36,6 @@ angular.module('starter.controllers', [])
       timePickerCallback(val);
     }
   }
-  
-  $scope.mapCreated = function(map) {
-    $scope.map = map;
-  }
-
 })
 
 app.directive('standardTimeNoMeridian', function() {
@@ -97,8 +92,34 @@ app.directive('standardTimeNoMeridian', function() {
 })
 
 .controller('StartUnderCtrl', function($scope) {
-  $scope.mapCreated = function(map) {
+  
+})
+
+.controller('StartOverlayCtrl', function($scope, $http) {
+  $scope.addresses = [];
+  $scope.deptAddress = "";
+  $scope.addressQueryInProcess = false;
+  $scope.addressQueryOnWait = "";
+  $scope.candidateAddressResults = {}
+  $scope.latitude = -1;
+  $scope.longitude = -1;
+
+  $scope.useCurrentPosition = function(position) {
+     $scope.latitude = position.coords.latitude;
+     $scope.longitude = position.coords.longitude;
+     function setCenter() {
+       if($scope.map) {
+          $scope.map.setCenter($scope.latitude, $scope.longitude);
+       }else{
+          setTimeout(setCenter, 100);
+       }
+     }
+     setCenter();
+  }
+
+  $scope.mapCreated = function(map, ui) {
     $scope.map = map;
+    $scope.ui = ui;
   };
 
   $scope.centerOnMe = function () {
@@ -120,22 +141,7 @@ app.directive('standardTimeNoMeridian', function() {
       alert('Unable to get location: ' + error.message);
     });
   };
-})
 
-.controller('StartOverlayCtrl', function($scope, $http) {
-  $scope.addresses = [];
-  $scope.deptAddress = "";
-  $scope.addressQueryInProcess = false;
-  $scope.addressQueryOnWait = "";
-  $scope.candidateAddressResults = {}
-  $scope.latitude = -1;
-  $scope.longitude = -1;
-
-  $scope.useCurrentPosition = function(position) {
-     $scope.latitude = position.coords.latitude;
-     $scope.longitude = position.coords.longitude;
-     console.log('GPS: ' + $scope.latitude + " , " + $scope.longitude);
-  }
 
   if (navigator.geolocation) {
      navigator.geolocation.getCurrentPosition($scope.useCurrentPosition);
@@ -181,7 +187,8 @@ app.directive('standardTimeNoMeridian', function() {
 
 
   $scope.getLocation = function (user_address, callback) {
-    var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=evk3TrU4UcresAseG8Da&app_code=z4yYohROherMZ57eHTsQUg";
+    var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=" + HERE_APP_ID 
+    + "&app_code=" + HERE_APP_CODE;
     console.log('get');
     $http({
       method: 'GET',
