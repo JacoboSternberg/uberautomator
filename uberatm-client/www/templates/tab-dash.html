@@ -44,8 +44,8 @@
   <ion-content class="" scroll="false">
     <!-- <div class="overlay-spacer"></div> -->
 
-    <form ng-submit="findRoute()">
-      <div class="list list-inset animate-show input-block" ng-show="showSourcePage">
+    <form ng-submit="onSelectDestination();">
+      <div class="list list-inset animate-show input-block" ng-show="formData.showSourcePage">
         <label class="item item-input">
           <i class="icon ion-search placeholder-icon"></i>
           <input type="search" placeholder="Departure Location" ng-model="formData.deptAddress">
@@ -70,14 +70,14 @@
           <!-- <input type="checkbox" ng-click="$publicTransportation">Public Transportation? </input> -->
         </label>
 
-        <button class="text-wrap button button-full button-positive site-block" style="z-index: 1;" ng-click="showSourcePage=false; showDestinationPage=true; onSelectDestination();">
-              Select Destination
+        <button class="text-wrap button button-full button-positive site-block" style="z-index: 1;" ng-click="formData.showSourcePage=false; formData.showDestinationPage=true; onSelectDeparture();">
+              Start Here
         </button>
 
       </div>
 
 
-      <div class="list list-inset animate-show input-block" ng-show="showDestinationPage">
+      <div class="list list-inset animate-show input-block" ng-show="formData.showDestinationPage">
         <label class="item item-input">
           <i class="icon ion-search placeholder-icon"></i>
           <input type="search" placeholder="Destination Location" ng-model="formData.destAddress">
@@ -88,13 +88,18 @@
         </div>
 
         <label class="item item-text-wrap" style="background-color: rgba(255,255,255,0.9);">
-          <button class="button button-full site-block" style="z-index: 1;" ng-click="showSourcePage=true; showDestinationPage=false;">
+
+          <button class="button button-full site-block" style="z-index: 0;" ng-click="formData.showSourcePage=true; formData.showDestinationPage=false;">
               Back
           </button>
+                    
 
           <button class="button button-full button-positive site-block" type = "submit" style="z-index: 0;">
             Find Route!
           </button>
+
+
+          
         </label>
       </div>
 

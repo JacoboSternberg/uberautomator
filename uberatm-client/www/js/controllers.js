@@ -106,8 +106,8 @@ app.directive('standardTimeNoMeridian', function() {
   $scope.car_ids = []
   $scope.latitude = -1;
   $scope.longitude = -1;
-  $scope.showSourcePage = true;
-  $scope.showDestinationPage = false;
+  $scope.formData.showSourcePage = true;
+  $scope.formData.showDestinationPage = false;
 
   // deciding which block of inputs to shown.
   $scope.input1Shown = true;
@@ -146,7 +146,7 @@ app.directive('standardTimeNoMeridian', function() {
 
     $scope.getLocation(deptAddress, function(response) {
       console.log('response', response);
-      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      var candidateAddressResults = $scope.getCandidateAddress(response);
       $scope.candidateAddressResults = candidateAddressResults;
       addresses = []
       for(var key in candidateAddressResults) {
@@ -175,7 +175,7 @@ app.directive('standardTimeNoMeridian', function() {
     $scope.addressQueryInProcess = true;
     $scope.getLocation(targetAddress, function(response) {        
       console.log('response', response);
-      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      var candidateAddressResults = $scope.getCandidateAddress(response);
       $scope.candidateAddressResults = candidateAddressResults;
       addresses = []
       for(var key in candidateAddressResults) {
@@ -212,7 +212,7 @@ app.directive('standardTimeNoMeridian', function() {
 
   $scope.onClickHere = function() {
     $scope.getLocation("*", function(response) {
-      var candidateAddressResults = $scope.getCandidateAdresses(response);
+      var candidateAddressResults = $scope.getCandidateAddress(response);
       addresses = []
       for(var key in candidateAddressResults) {
         addresses.push(key);
@@ -223,12 +223,32 @@ app.directive('standardTimeNoMeridian', function() {
     })
   }
 
+  $scope.onSelectDeparture = function() {
+    $scope.getLocation($scope.formData.deptAddress, function(response) {
+      var candidateAddressResults = $scope.getCandidateAddress(response);
+      var candidateAddressKeys = $scope.getCandidateAdressKeys(candidateAddressResults);
+      $scope.startPos = candidateAddressResults[candidateAddressKeys[0]];
+      var marker = new H.map.Marker({
+        lat: $scope.startPos.position[0],
+        lng: $scope.startPos.position[1]
+      });
+      $scope.map.addObject(marker);
+    })
+  }
+
   $scope.onSelectDestination = function() {
-    console.log('search for ', $scope.formData.deptAddress);
-    $scope.getLocation("california memorial stadium", function(response) {
-      var candidateAddressResults = $scope.getCandidateAdresses(response);
-      $scope.startPos = candidateAddressResults[0];
-      console.log($scope.startPos);
+    $scope.getLocation($scope.formData.destAddress, function(response) {
+      var candidateAddressResults = $scope.getCandidateAddress(response);
+      console.log('candidates', candidateAddressResults);
+      var candidateAddressKeys = $scope.getCandidateAdressKeys(candidateAddressResults);
+      $scope.endPos = candidateAddressResults[candidateAddressKeys[0]];
+      console.log('endPos', $scope.endPos);
+      $scope.getPublicTransportRoute(
+        $scope.startPos.position[0],
+        $scope.startPos.position[1],
+        $scope.endPos.position[0],
+        $scope.endPos.position[1],
+        $scope.drawRouteOnMap);
     })
   }
 
@@ -251,8 +271,11 @@ app.directive('standardTimeNoMeridian', function() {
   }
 
   $scope.getLocation = function (user_address, callback) {
+    if(!user_address) 
+      return;
     var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=" + HERE_APP_ID
     + "&app_code=" + HERE_APP_CODE;
+
     $http({
       method: 'GET',
       url: here_url,
@@ -262,8 +285,8 @@ app.directive('standardTimeNoMeridian', function() {
       }
     }).then(function successCallback(response) {
       //The request worked. Do some display stuff.
+      console.log('get location', response);
       callback(response);
-      console.log(response);
       // callback(addresses);
       // var latitude = address.Response.View.Result.Location.NavigationPosition.Latitude;
       // var longitude = address.Response.View.Result.Location.NavigationPosition.Longitude;
@@ -274,7 +297,7 @@ app.directive('standardTimeNoMeridian', function() {
     });
   }
 
-  $scope.getCandidateAdresses = function(response) {
+  $scope.getCandidateAddress = function(response) {
     var results = {}
     if(response.data.results.items.length > 0) {
       for(var result of response.data.results.items) {
@@ -285,28 +308,86 @@ app.directive('standardTimeNoMeridian', function() {
     return results;
   }
 
-  $scope.getPublicTransportParams = function(startLat, startLong, endLat, endLong) {
-    return {
-      waypoint0: "geo!" + startLat + "," + startLong,
-      waypoint1: "geo!" + endLat + "," + endLong,
-      mode: "fastest;publicTransportTimeTable",
-      combineChange: "true",
-      representation: "display"
-      // arrival: //Add the correct time and date here. format:2013-09-09T12:44:56
+  $scope.getCandidateAdressKeys = function(candidates) {
+    var keys = [];
+    for(var key in candidates) {
+      keys.push(key);
     }
+    return keys;
   }
-  $scope.getPublicTransportRoute = function(startLat, startLong, endLat, endLong) {
+
+  $scope.getPublicTransportRoute = function(startLat, startLong, endLat, endLong, callback) {
     var here_url = "http://route.cit.api.here.com/routing/7.2/calculateroute.json?app_id=" + HERE_APP_ID
     + "&app_code=" + HERE_APP_CODE;
     $http({
       method: 'GET',
-      url: 'here_url',
-      params: $scope.getPublicTransportParams(startLat, startLong, endLat, endLong)
+      url: here_url,
+      params: {
+        waypoint0: "geo!" + startLat + "," + startLong,
+        waypoint1: "geo!" + endLat + "," + endLong,
+        mode: "fastest;publicTransport",
+        combineChange: "true",
+        representation: "display"
+        // arrival: //Add the correct time and date here. format:2013-09-09T12:44:56
+      }
     }).then(function successCallback(response) {
+      callback(response);
       // do something with the route we found.
     }, function errorCallback(response) {
       console.log(response.status, "errorcode");
     });
+  }
+
+  $scope.drawRouteOnMap = function(response) {
+    result = response.data;
+    var map = $scope.map;
+    var route,
+      routeShape,
+      startPoint,
+      endPoint,
+      strip;
+    if(result.response.route) {
+      // Pick the first route from the response:
+      route = result.response.route[0];
+      // Pick the route's shape:
+      routeShape = route.shape;
+
+      // Create a strip to use as a point source for the route line
+      strip = new H.geo.Strip();
+
+      // Push all the points in the shape into the strip:
+      routeShape.forEach(function(point) {
+        var parts = point.split(',');
+        strip.pushLatLngAlt(parts[0], parts[1]);
+      });
+
+      // Retrieve the mapped positions of the requested waypoints:
+      startPoint = route.waypoint[0].mappedPosition;
+      endPoint = route.waypoint[1].mappedPosition;
+
+      // Create a polyline to display the route:
+      var routeLine = new H.map.Polyline(strip, {
+        style: { strokeColor: 'blue', lineWidth: 10 }
+      });
+
+      // Create a marker for the start point:
+      var startMarker = new H.map.Marker({
+        lat: startPoint.latitude,
+        lng: startPoint.longitude
+      });
+
+      // Create a marker for the end point:
+      var endMarker = new H.map.Marker({
+        lat: endPoint.latitude,
+        lng: endPoint.longitude
+      });
+
+      // Add the route polyline and the two markers to the map:
+      map.addObjects([routeLine, startMarker, endMarker]);
+
+      // Set the map's viewport to make the whole route visible:
+      map.setViewBounds(routeLine.getBounds());
+    }
   }
 
   $scope.getPrivateTransportRoute = function(startLat, startLong, endLat, endLong) {
@@ -326,23 +407,6 @@ app.directive('standardTimeNoMeridian', function() {
     }, function errorCallback(response) {
       console.log(response.status, "errorcode");
     });
-  }
-
-  $scope.findRoute = function() {
-    $scope.getLocation($scope.formData.destAddress, function(response) {
-      // get target location first.
-      var candidateAddressResults = $scope.getCandidateAdresses(response);
-      $scope.endPos = candidateAddressResults[0];
-      // compute a route.
-      if($scope.startPos && $scope.endPos) {
-        $scope.getPublicTransportParams(
-          $scope.startPos.location[0], 
-          $scope.startPos.location[1],
-          $scope.endPos.location[0],
-          $scope.endPos.location[1]
-        );
-      }
-    })
   }
 
   $scope.callUber = function(curr_long, curr_lat) {
@@ -439,4 +503,8 @@ app.directive('standardTimeNoMeridian', function() {
     }
     return $scope.times.indexOf(Math.min.apply(Math, $scope.times));
   }
+
+  $scope.getLocation("california memorial stadium", function(response) {
+    console.log('warm up', response);
+  }) // a warm-up request.
 })
