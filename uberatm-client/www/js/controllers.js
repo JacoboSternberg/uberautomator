@@ -16,7 +16,6 @@ angular.module('starter.controllers', [])
       console.log('Time not selected');
     } else {
       var selectedTime = new Date(val * 1000);
-      console.log('Selected epoch is : ', val, 'and the time is ', selectedTime.getUTCHours(), ':', selectedTime.getUTCMinutes(), 'in UTC');
       $scope.epochTime = val;
     }
   }  
@@ -95,12 +94,14 @@ app.directive('standardTimeNoMeridian', function() {
   
 })
 
-.controller('StartOverlayCtrl', function($scope, $http) {
+.controller('StartOverlayCtrl', function($scope, $http, $state) {
   $scope.addresses = [];
   $scope.deptAddress = "";
   $scope.addressQueryInProcess = false;
   $scope.addressQueryOnWait = "";
   $scope.candidateAddressResults = {}
+  $scope.times = []
+  $scope.car_ids = []
   $scope.latitude = -1;
   $scope.longitude = -1;
 
@@ -200,9 +201,10 @@ app.directive('standardTimeNoMeridian', function() {
   }
 
   $scope.getLocation = function (user_address, callback) {
+    var HERE_APP_ID='evk3TrU4UcresAseG8Da';
+    var HERE_APP_CODE='z4yYohROherMZ57eHTsQUg';
     var here_url = "https://places.demo.api.here.com/places/v1/discover/search?app_id=" + HERE_APP_ID 
     + "&app_code=" + HERE_APP_CODE;
-    console.log('get');
     $http({
       method: 'GET',
       url: here_url,
@@ -212,13 +214,10 @@ app.directive('standardTimeNoMeridian', function() {
       }
     }).then(function successCallback(response) {
       //The request worked. Do some display stuff.
-      callback(response)
-      console.log(response);
-      // callback(addresses);
-      // var latitude = address.Response.View.Result.Location.NavigationPosition.Latitude;
-      // var longitude = address.Response.View.Result.Location.NavigationPosition.Longitude;
-      // $scope.callUber(); //We now call uber since it worked
+      //callback(response)
+      console.log(response.results);
     }, function errorCallback(resonse) {
+      console.log("error");
       //Display error in the UI
     });
   }
@@ -234,38 +233,54 @@ app.directive('standardTimeNoMeridian', function() {
     callback(results);
   }
 
-  $scope.callUber = function(deptAddress) {
-    console.log(deptAddress);
-    var url = 'https://api.uber.com/v1/products';
-    $(".box").append("<button class='button overflowShow' value='Reload Page' onClick='window.location.reload()'></button>");
-    $(".box").append("<div class='timeLeft'> Time left: </div>");
-    $(".box").append("<div class='eta'> ETA: </div>");
-    $(".box").append("<div class='callIn'> Calling Uber in: </div>");
-    while (true) {
-      var car_ids = []
-      $scope.getLocation(deptAddress, $scope.getCandidateAdresses);
-      var parameters = {
-          'server_token': '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf',
-          'latitude': $scope.latitude,
-          'longitude': $scope.longitude
-      };
-      $http.get(url, parameters).then(successCallback, errorCallback);
+  $scope.callUber = function(curr_long, curr_lat) {
+    $state.transitionTo("search");
+    var url = "https://api.uber.com/v1/products";
+    //while (true) {
+    var parameters = {
+        'server_token': '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf',
+        'latitude': curr_long,
+        'longitude': curr_lat
+    };
+    $http.get(url, parameters).then(successCallback, errorCallback);
     function successCallback(response) {
       for (var product in response.products) {
-        car_ids.push(product.product_id);
+        $scope.car_ids.push(product.product_id);
       }
     };
     function errorCallback(response) {
-
+      console.log("error");
     };
-    $(".box .eta").append($scope.estimateUber(car_ids));
-    $(".box .timeLeft").append($scope.epochParser($scope.epochTime - $.now(), "time"));
+    $(".box .timeLeft p").html()
+    var eta = $scope.estimateUber($scope.car_ids);
+    $(".box .eta p").html($scope.car_ids[eta]);
+    //$(".box .callIn p").html($) // Unable to do this until we fix epochTime/create 
+    // way to call the time.
+    if ($.now() > $scope.epochTime) {
+      var requestUrl = "https://api.uber.com/v1/requests";
+      var requestParams = {
+        'product_id': $scope.times[eta],
+        'start_latitude': curr_lat,
+        'start_longitude': curr_long,
+        'end_latitude': null, //Get What the endtime is from Tim.
+        'end_longitude': null //Get what the endtime is from Tim.
+      };
+      request_id = $http.post(requestUrl, requestParams).then(function(response){return response.request_id}, function(response){console.log("error")});
+      var displayUrl = "https://api.uber.com/v1/requests/{" + request_id + "}/map";
+      map = $http.get(displayUrl).then(function(response){return response.href});
+      $(".map").html("<img src='" + map + "></img>");
+    }
+    //$(".box .timeLeft p").html($scope.epochParser($scope.epochTime - $.now()/1000, "time"));
     // We should be able to create a server in order to store user's time request data.
 
     // Top: Map of uber drivers nearby
     // Middle-bottom: Time left until requested time, minimum ETA of driver
     // Driver ETA: calling in [(time left - minimum ETA)]
-    }
+    //}
+  }
+
+  $scope.cancel = function() {
+    $state.transitionTo("dash");
   }
 
   $scope.epochParser = function (val, opType) {
@@ -301,23 +316,15 @@ app.directive('standardTimeNoMeridian', function() {
       }
 
   $scope.estimateUber = function(car_ids) {
-    times = []
-    var url = 'https://api.uber.com/v1/requests/estimate';
-    for (car in car_ids) {
+    var url = "https://api.uber.com/v1/requests/estimate";
+    for (car in $scope.car_ids) {
       var parameters = {
         'product_id': car,
         'start_latitude': $scope.latitude,
         'start_longitude': $scope.longitude,
-        'end_latitude': null, // Either user inputted location or HERE maps deteremined location
-        'end_longitude': null// Same as above
       }    
-      $http.post(url, parameters).then(
-        function(response){
-          times.push(response.pickup_estimate);
-        }, function(response){
-          console.log("error");
-        });
+      $http.post(url, parameters).then(function(response){$scope.times.push(response.pickup_estimate);}, function(response){console.log("error");});
     }
-    return Math.min.apply(Math, times);
+    return $scope.times.indexOf(Math.min.apply(Math, $scope.times));
   }
 })

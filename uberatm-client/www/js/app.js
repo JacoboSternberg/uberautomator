@@ -32,17 +32,20 @@ app.run(function($ionicPlatform) {
   // Learn more here: https://github.com/angular-ui/ui-router
   // Set up the various states which the app can be in.
   // Each state's controller can be found in controllers.js
+  $urlRouterProvider.otherwise('/dash');
   $stateProvider
-
-
-  .state('dash', {
-    url: '/dash',
-    templateUrl: 'templates/tab-dash.html',
-    controller: 'DashCtrl'
-  });
+    .state('dash', {
+      url: '/dash',
+      templateUrl: 'templates/tab-dash.html',
+      controller: 'DashCtrl'
+    })
+    .state('search', {
+      url: '/search', 
+      templateUrl: 'templates/search.html',
+      controller: 'DashCtrl'
+    });
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/dash');
 
 });
 

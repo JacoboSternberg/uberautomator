@@ -7,3 +7,8 @@ html {
 	display:block;
 	margin:10px auto;
 }
+
+.box {
+	background-color: #AAAAAA;
+	margin:auto 40%;
+}
