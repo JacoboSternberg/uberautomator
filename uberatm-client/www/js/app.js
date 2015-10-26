@@ -7,6 +7,7 @@
 // 'starter.controllers' is found in controllers.js
 HERE_APP_ID = "evk3TrU4UcresAseG8Da";
 HERE_APP_CODE = "z4yYohROherMZ57eHTsQUg";
+UBER_APP_TOKEN = '3_hEHw2oOLy9jPtAYc-fBXqWMHXmP2WVChp1Kjpf'
 
 app = angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', 'starter.directives', 'ionic-timepicker', 'ionic.contrib.frost']);
 

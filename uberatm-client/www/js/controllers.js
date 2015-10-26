@@ -645,11 +645,11 @@ app.directive('standardTimeNoMeridian', function() {
 
   $scope.estimateUberEta = function(lat, lng, callback) {
     // TODO: hack;
-    callback(Math.floor(Math.random() * 10));
-    return;
+    // callback(Math.floor(Math.random() * 10));
+    // return;
 
     $scope.getUberCarIds(lat, lng, function(car_ids) {
-      var url = "http://crossorigin.me/https://api.uber.com/v1/requests/estimate";
+      var url = "https://api.uber.com/v1/requests/estimate";
       var times = [];
       if(car_ids.length == 0) 
         return;
@@ -662,6 +662,9 @@ app.directive('standardTimeNoMeridian', function() {
       $http({
         method: 'POST',
         url: url,
+        headers: {
+          'Authorization': 'Token ' + UBER_APP_TOKEN
+        },
         params: parameters
       }).then(function successCallback(response) {
         console.log('uber estimate', response);

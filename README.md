@@ -1,5 +1,31 @@
-# Hermes
-One of the few issues with Uber is waiting for the driver to arrive at your location and long distance traveling. Hermes aims to solve both those problems.
+# Hermes (UberAutomator)
+
+## Inspiration
+
+People love Uber, but they haven't abandoned the other transportations. This is because Uber might be optimal for in-city transportation, it is either too *slow* or too *expensive* to take between longer distances. 
+
+### Examples
+
+* **Uber + Caltrain**. A lot of people in the Bay Area commute to work. One of the increasingly popular patterns is uber-caltrain-uber. 
+* **Uber + Flights**.
+
+### A Large-Scale Problem We Solve
+
+Can we **automate** and **simplify** the tedious process of itinerary planning and execution? 
+
+## What it does
+
+* [Watch the demo video](demo/hermes1.mov)
+
+Hermes solves the raised problem by integrating Uber with long-distance transportation. 
+
+* **End-to-End planning**. Users tell the app where to go and what is the time of departure. Hermes finds a route that combines long-distance transportation and Uber.
+
+
+* **Right on time**. Hermes estimates ETA of Uber driver, and make calls **in advance**. So the Uber driver will show up right on time.
+
+* **Use app once for all**. Hermes uses current location and time to estimate progress. Based on the route, if the user is taking the public transportation and is about to arrive at the station, it makes Uber calls automatically. 
+
 
 # How It Works
 
